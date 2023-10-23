@@ -2,6 +2,8 @@
 
 Este projeto consiste em dois servidores: um em React que implementa a interface gráfica do usuário, e outro em Express que implementa a lógica de negócio e o acesso ao banco de dados.
 
+## Documentação https://docs.google.com/document/d/19IEhn_WZ9RWaERBJOiF-goTzkxk51Lb86n147OTndlQ/edit
+
 ## 🚀 Funcionalidades
 
 O sistema permite:
