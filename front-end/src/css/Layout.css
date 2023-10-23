@@ -1,0 +1,129 @@
+/* Estilos gerais do Layout */
+.main-layout{
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+
+/* Estilos da Navbar superior */
+.n-avbar {
+  background-color: #0d6efd;
+  color: #fff;
+  text-align: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.body-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: url('../img/blur-hospital.jpg') no-repeat center/cover;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-grow: 1;
+  overflow: auto;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-image: url('../img/blur-hospital.jpg'); /* Substitua pelo caminho da sua imagem */
+    background-size: cover;
+    background-repeat: no-repeat;
+  
+}
+
+.home-container {
+  /*display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-top: 60px;
+  box-sizing: border-box;
+  min-height: 100vh; /* Defina uma altura mínima para home-container */
+  /*position: relative; /* Adicione esta linha */
+}
+
+/* Estilos da barra de navegação */
+.nav-links {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links li {
+  margin-right: 20px;
+}
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: #ff7f00;
+}
+
+.menu-nav-bar {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.logout-button button {
+  background-color: #ff4444;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logout-button button:hover {
+  background-color: #ff0000;
+}
+
+.logo-uern {
+  margin: 8px 8px 0 20px;
+  max-width: 100px;
+  height: auto;
+}
+
+/* Estilos do bloco principal de menu e conteúdo */
+.content-container {
+  padding: 0;
+  margin-top: 0px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
+  /*position: absolute; /* Adicione esta linha */
+  /*top: 40px; /* Adicione esta linha */
+  bottom: 0; /* Adicione esta linha */
+}
+
+
+/* Media queries para diferentes tamanhos de tela */
+
+
+
+/* Outros estilos para a página */
+h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+p {
+  font-size: 1.2rem;
+}

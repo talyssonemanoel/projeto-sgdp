@@ -1,0 +1,67 @@
+  /* Specialties.css */
+  
+  .body-specialties {
+    width: 1200px;
+    background-color: white;
+    height: 557px;
+  }
+  
+  .specialties-container {
+      display: flex;
+      justify-content: flex-start;
+      align-items: stretch;
+      height: 557px;
+  }
+
+  .specialties-sidebar {
+      width: 30%;
+      background-color: #f4f4f4;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+  }
+
+  .specialists-list {
+      width: 70%;
+      padding: 20px;
+  }
+
+  /* Estilos para os botões de especialidade */
+  .specialty-button {
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+      cursor: pointer;
+      color: #333;
+      transition: color 0.2s;
+
+      &:hover {
+          color: #555;
+      }
+  }
+
+  /* Estilos para os botões dos especialistas */
+  .specialist-button {
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+      cursor: pointer;
+      color: #333;
+      transition: color 0.2s;
+
+      &:hover {
+          color: #555;
+      }
+  }
+
+  /* Remova as bolinhas (marcadores) da lista não ordenada */
+  .specialties-list {
+      list-style-type: none;
+  }
+
+  /* Remova as bolinhas (marcadores) da lista não ordenada dos especialistas */
+  .specialists-list ul {
+      list-style-type: none;
+  }

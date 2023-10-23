@@ -1,0 +1,126 @@
+
+
+/* Definir as cores principais */
+:root {
+  --primary-color: #104ea0;
+  --secondary-color: #ffffff;
+  --error-color: #d93025;
+}
+
+/* Importar a fonte google sans do Google Fonts */
+@import url('https://fonts.googleapis.com/css?family=Google+Sans&display=swap');
+
+/* Aplicar a fonte google sans em todos os elementos da página */
+* {
+  font-family: 'Google Sans', sans-serif;
+}
+
+/* Estilizar a página de login */
+.body-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-image: url('../img/blur-hospital.jpg'); /* Substitua pelo caminho da sua imagem */
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+/* Estilizar o container do login */
+.login-container {
+  background:  #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80%;
+  max-width: 600px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estilizar a imagem do logo */
+.logo {
+  width: min(80%, 300px); 
+  margin: 0 10%;
+  height: auto;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+/* Estilizar o formulário de login */
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80%;
+}
+
+/* Estilizar o título do login */
+.login-heading {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  color: #084a94;
+}
+
+.login-message {
+  font-size: 13px;
+}
+
+/* Estilizar os inputs do login */
+.login-input {
+  width: 100%;
+  height: 40px;
+  margin-top: 10px;
+  padding-left: 10px;
+  border: 1px solid #084a94;
+}
+
+/* Estilizar o botão do login */
+.login-button {
+  width: 100%;
+  height: 40px;
+  margin-top: 10px;
+  border: none;
+  background-color: #084a94;
+  color: white;
+  margin-bottom: 20px;
+}
+
+/* Estilizar a mensagem de erro */
+.error-message {
+  color: var(--error-color);
+}
+
+/* Estilizar as mensagens de login */
+.login-message {
+   margin-top:10px; 
+   font-size :14 px; 
+   text-align :center; 
+}
+
+/* Adicione estilos para os botões */
+.login-buttons {
+  margin-bottom: 20px;
+  display:flex;
+  text-align: center; /* Centraliza os botões */
+}
+
+.forgot-password-button,
+.privacy-policy-button {
+  background-color: #084a94; /* Cor de fundo do botão */
+  color: #fff; /* Cor do texto do botão */
+  border: none; /* Remove a borda do botão */
+  margin: 0 10px; /* Espaçamento entre os botões */
+  font-size:small; /* Use a unidade vw para ajustar o tamanho da fonte */
+  height: max-content;
+  width: max-content;
+  cursor: pointer; /* Transforma o cursor em uma mão ao passar sobre o botão */
+  text-decoration: none; /* Remove sublinhado do texto (caso haja) */
+}
+
+/* Estilo ao passar o mouse sobre os botões */
+.forgot-password-button:hover,
+.privacy-policy-button:hover, .login-button:hover {
+  background-color: #0056b3; /* Altera a cor de fundo ao passar o mouse */
+}

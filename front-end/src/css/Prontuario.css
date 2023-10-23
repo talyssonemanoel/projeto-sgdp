@@ -1,0 +1,79 @@
+.body-buscar-paciente {
+    height: 100%;
+}
+
+.body-prontuario {
+    background-color: #f2f2f2;
+    height: 100%;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    padding-left: 12px;
+}
+
+.cabecalho-prontuario {
+    background-color: white;
+    padding: 12px;
+    margin-right: 12px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.176);
+    border-width: 1px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+
+
+.card-text {
+    min-width: 800px;
+}
+
+
+.date-card {
+    padding: 0px;
+    margin: 0px;
+    max-height: 75px;
+    max-width: 48px;
+    min-width: 48px;
+}
+
+.body-do-card {
+    
+}
+
+.ano-text {
+    font-size: small;
+}
+
+.mes-text {
+    font-size: medium;
+}
+
+.dia-text {
+    font-size: x-large;
+}
+
+.block-body {
+    height: 85vh;
+    background-color: transparent;
+    width: 30vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: left;
+}
+
+.block-input {
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.titulo-input {
+    justify-content: left;
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+.input-container {
+    padding: 0 10px 10px 10px;
+}

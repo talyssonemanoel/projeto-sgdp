@@ -1,0 +1,93 @@
+/* Definir as cores principais */
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #f0f0f0;
+    --error-color: #dc3545;
+  }
+
+  .body-especialista-pesquisa {
+    background-color: white!important;
+  }
+  
+  /* Estilizar o container principal */
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+  }
+  
+  /* Estilizar o botão de adicionar especialista */
+  .button {
+    width: 200px;
+    margin-bottom: 20px;
+  }
+  
+  /* Estilizar a linha do formulário de pesquisa */
+  .row {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  /* Estilizar a coluna do formulário de pesquisa */
+  .col {
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+  }
+  
+  /* Estilizar o título da pesquisa */
+  h1 {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  /* Estilizar o formulário de pesquisa */
+  .form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Estilizar os grupos do formulário de pesquisa */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+  }
+  
+  /* Estilizar os labels do formulário de pesquisa */
+  .form-label {
+    font-size: 16px;
+  }
+  
+  /* Estilizar os inputs do formulário de pesquisa */
+  .form-control {
+    height: 40px;
+    padding-left: 10px;
+  }
+  
+  /* Estilizar o botão de pesquisa */
+  .form button {
+    width: 100%;
+    height: 40px;
+  }
+  
+  /* Estilizar a tabela de resultados da pesquisa */
+  .table {
+    width: 100%;
+  }
+  
+  /* Estilizar as células da tabela de resultados da pesquisa */
+  .table td, .table th {
+     padding :10 px; 
+     text-align :center; 
+  }
+  
+  /* Estilizar o modal de edição de especialista */
+  .modal {
+     width :80%; 
+     margin :auto; 
+  }
+  

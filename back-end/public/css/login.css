@@ -1,0 +1,79 @@
+body {
+    font-family: "Google Sans";
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-image: url('../blur-hospital.jpg'); /* Substitua pelo caminho da sua imagem */
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+  
+  .login-page {
+    width: 100%;
+    max-width: 360px;
+  }
+  
+  .form {
+    background: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  
+  img {
+    width: 100%;
+    max-width: 217px;
+    display: block;
+    margin: 0 auto 20px;
+  }
+  
+  input[type="text"],
+  input[type="password"] {
+    display: block;
+    width: 89%;
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    letter-spacing: 1px;
+    border-radius: 5px;
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    letter-spacing: 1px;
+    border-radius: 5px;
+  }
+  
+  button {
+    background-color: #00a0d2;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  button:hover {
+    background-color: #008cb9;
+  }
+  
+  .message {
+    text-align: center;
+    color: #aaa;
+    margin-top: 10px;
+  }
+  
+  .message a {
+    color: #00a0d2;
+    text-decoration: none;
+  }
+  

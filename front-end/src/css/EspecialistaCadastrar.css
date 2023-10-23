@@ -1,0 +1,41 @@
+.content {
+  text-align: center;
+  padding: 20px;
+}
+
+fform {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+slabel {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+sinput,
+sselect {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.submit-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: #0056b3;
+}

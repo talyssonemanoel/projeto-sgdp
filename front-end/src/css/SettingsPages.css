@@ -1,0 +1,82 @@
+/* Estilo para a página de configurações */
+.main-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+span {
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* Estilo para os campos de senha */
+input.valid-password {
+    border: 2px solid #4caf50;
+}
+
+input.invalid-password {
+    border: 2px solid #f44336;
+}
+
+/* Estilo para o modal de edição */
+.modal-content {
+    border-radius: 5px;
+}
+
+.modal-header {
+    background-color: #007bff;
+    color: #fff;
+    border-bottom: none;
+}
+
+.modal-title {
+    font-size: 18px;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    border-top: none;
+}
+
+/* Estilo para os botões do modal */
+.modal-footer .btn-secondary {
+    background-color: #ccc;
+    color: #000;
+}
+
+.modal-footer .btn-primary {
+    background-color: #007bff;
+    color: #fff;
+}

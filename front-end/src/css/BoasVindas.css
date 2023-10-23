@@ -1,0 +1,116 @@
+/* BoasVindas.css */
+
+body {
+  background-color: white;
+}
+
+.body-boas-vindas {
+  max-width: 1200px;
+  background-color: white;
+  padding-bottom: 20px;
+  height: auto;
+}
+
+/* Estilos para o contêiner principal */
+.boas-vindas-container {
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.boas-vindas-title {
+  font-size: 24px;
+  color: #333;
+  margin: 10px 0;
+}
+
+/* Estilos para o subtítulo (se houver) */
+.boas-vindas-subtitle {
+  font-size: 16px;
+  color: #555;
+  margin: 10px 0;
+}
+
+/* Estilos para informações adicionais (se houver) */
+.boas-vindas-info {
+  font-size: 18px;
+  color: #444;
+  margin: 10px 0;
+}
+
+/* Estilos para o contêiner de notícias RSS (se houver) */
+.boas-vindas-rss {
+  margin: 20px 0;
+}
+
+/* Estilos para o componente NoticiasRSS (se houver) */
+.noticias-rss-container {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #fff;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para caixa de informações adicionais (se houver) */
+.boas-vindas-info-box {
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  text-align: right;
+}
+
+/* Estilos para o contêiner de mensagens */
+.mensagens-container {
+  width: 100%;
+  max-width: 1000px; /* Ajuste conforme necessário */
+  margin: 20px auto;
+  margin-bottom: 0px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+  text-align: left; /* Ajuste conforme necessário */
+}
+
+/* Estilos para o título "Mural" */
+.mensagens-container h3 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.mensagem {
+  margin-bottom: 10px; /* Adicione um espaço entre as mensagens */
+}
+
+.data-hora {
+  font-size: 12px; /* Tamanho de fonte menor */
+  color: gray; /* Cor de texto desejada */
+  float: right; /* Alinhe à direita */
+}
+
+
+/* Estilos para as mensagens individuais */
+.mensagem {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  word-wrap: break-word;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #f9f9f9;
+  max-width: 80%; /* Limita a largura da mensagem */
+}
+
+.mensagem strong {
+  font-weight: bold;
+  color: #333;
+}
+
+.mensagem span {
+  color: #666;
+}

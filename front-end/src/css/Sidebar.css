@@ -1,0 +1,17 @@
+/* Sidebar.css */
+
+.bm-menu {
+    background-color: #333;
+    padding: 1rem;
+  }
+  
+  .bm-item {
+    color: white;
+    display: block;
+    padding: 0.5rem;
+    text-decoration: none;
+    background-color: black;
+  }
+  
+  /* Adicione mais estilos conforme necessário */
+  
