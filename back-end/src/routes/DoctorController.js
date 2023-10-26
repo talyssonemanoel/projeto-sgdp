@@ -34,19 +34,20 @@ router.post('/add', verifyAdminPermission, async (req, res) => {
         }
 
         const doctorData = {
-            name: req.body.name,
-            cpf: req.body.cpf,
-            phone: req.body.phone,
-            crm: req.body.crm || '',
+            Nome: req.body.nome,
+            Cpf: req.body.cpf,
+            Ocupacao: req.body.ocupacao,
+            CarteiraNacionalDeSaude: req.body.sus || '',
+            UBScadastrada: req.body.ubs || '',
+            Telefone: req.body.telefone,
             specialtyId: req.body.specialtyId, // Vincula o _id da especialidade
-            address: req.body.address || '',
-            email: req.body.email || '',
-            dateOfBirth: req.body.dateOfBirth || '',
-            sex: req.body.sex || '',
-            healthPlan: req.body.healthPlan || '',
-            startTime: req.body.startTime || '',
-            endTime: req.body.endTime || '',
-            residente: req.body.residente, // Novo campo residente
+            Endereco: req.body.endereco || '',
+            Bairro: req.body.bairro || '',
+            Email: req.body.email || '',
+            DataDeNascimento: req.body.datadenascimento || '',
+            OrientacaoSexual: req.body.orientacaosexual || '',
+            IdentidadeDeGenero: req.body.identidadedegenero || '',
+            Residente: req.body.residente, // Novo campo residente
         };
 
         // Insere os dados do médico na coleção
@@ -56,7 +57,7 @@ router.post('/add', verifyAdminPermission, async (req, res) => {
         const doctorId = result._id;
         
         // Gerar o atributo 'username' com base no nome
-        const username = await generateUniqueUsername(req.body.name);
+        const username = await generateUniqueUsername(req.body.nome);
 
         // Gerar uma senha aleatória
         const password = generateRandomPassword();
@@ -66,7 +67,6 @@ router.post('/add', verifyAdminPermission, async (req, res) => {
 
         // Dados do usuário a serem inseridos na coleção 'usuarios'
         const userData = {
-            nome: req.body.name,
             username: username,
             password: hashedPassword, // Salva o hash da senha
             email: req.body.email, // Email do especialista

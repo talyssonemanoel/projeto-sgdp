@@ -141,10 +141,10 @@ router.get('/livesearch', async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar médicos' });
     }
 });
-// Rota para atualizar um paciente por ID
 router.put('/update/:id', verifyTokenAndUser, async (req, res) => {
     try {
         const patientId = req.params.id;
+        const autorID = req.user.id;
         const updatedData = req.body; // Os dados atualizados devem estar no corpo da requisição
 
         // Verifique se o paciente com o ID fornecido existe
@@ -154,11 +154,32 @@ router.put('/update/:id', verifyTokenAndUser, async (req, res) => {
             return res.status(404).json({ error: 'Paciente não encontrado' });
         }
 
-        // Atualize os atributos do paciente com os dados fornecidos
-        const updatedPatient = Object.assign(patient, updatedData);
+        // Crie um campo "comentarios" no documento se ainda não existir
+        if (!patient.comentarios) {
+            patient.comentarios = [];
+        }
+
+        for (const key in updatedData) {
+            if (updatedData.hasOwnProperty(key)) {
+                // Obtenha o valor anterior
+                const valorAnterior = patient[key];
+
+                // Registre a alteração no campo "comentarios" do paciente
+                patient.comentarios.push({
+                    campo: key,
+                    valorAnterior,
+                    valorNovo: updatedData[key],
+                    dataHora: new Date(),
+                    autorAlteracao: autorID, // Suponha que você tenha informações sobre o autor da alteração na requisição.
+                });
+
+                // Atualize o valor do campo original
+                patient[key] = updatedData[key];
+            }
+        }
 
         // Salve as atualizações na coleção
-        const result = await db.collection(collectionName).update(patientId, updatedPatient);
+        const result = await db.collection(collectionName).update(patientId, patient);
 
         res.json({ message: 'Paciente atualizado com sucesso', result });
     } catch (error) {
@@ -166,6 +187,9 @@ router.put('/update/:id', verifyTokenAndUser, async (req, res) => {
         res.status(500).json({ error: 'Erro ao atualizar paciente' });
     }
 });
+
+
+
 
 
 router.get('/', async (req, res) => {

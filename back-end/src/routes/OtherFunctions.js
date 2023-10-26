@@ -54,13 +54,13 @@ function generateRandomPassword() {
 }
 
 // Função para gerar um username único
-async function generateUniqueUsername(name) {
-    let username = name.toLowerCase().replace(/\s+/g, ''); // Remove espaços e converte para minúsculas
+async function generateUniqueUsername(nome) {
+    let username = nome.toLowerCase().replace(/\s+/g, ''); // Remove espaços e converte para minúsculas
     let count = 1;
 
     // Verifica se o username já existe na coleção 'usuarios'
     while (await isUsernameTaken(username)) {
-        username = name.toLowerCase().replace(/\s+/g, '') + count; // Adiciona um número para torná-lo único
+        username = nome.toLowerCase().replace(/\s+/g, '') + count; // Adiciona um número para torná-lo único
         count++;
     }
 
