@@ -5,13 +5,6 @@ const path = require('path');
 // Importar o dotenv e carregar as variáveis de ambiente do arquivo .env
 require("dotenv").config();
 
-// Importar os arquivos de rotas
-//const index = require("./src/routes/index");
-/* const personRoutes = require("./src/routes/personRoutes");
-const doctorRoutes = require("./src/routes/doctorRoutes");
-const patientRoutes = require("./src/routes/patientRoutes");
-const service = require("./src/routes/serviceRoutes");
-const atendimentoRoutes = require("./src/routes/atendimentoRoutes"); */
 const patient = require("./src/routes/PatientRouter");
 const loginRoutes = require("./src/auth/loginService"); 
 const doctors = require("./src/routes/DoctorController");
@@ -29,13 +22,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Montar os routers na aplicação Express
 app.use("/", loginRoutes);
-/* app.use("/people", personRoutes);
-app.use("/doctors", doctorRoutes);
-
-app.use("/service", service);
-app.use("/atendimento", atendimentoRoutes); */
 app.use("/situacao", situacao);
 app.use("/especialidade", specialty);
 app.use("/prontuario", prontuario);
@@ -51,6 +38,7 @@ app.set('view engine', 'ejs'); // Define a engine de template como EJS
 
 // Definir a porta do servidor usando a variável de ambiente PORT ou o valor padrão 3001
 const port = process.env.PORT || 3001;
+const ipLocal = process.env.IP_LOCAL;
 
 // Iniciar o servidor
-app.listen(port, () => console.log(`Server running...${port}`));
+app.listen(port, ipLocal, () => console.log(`Server running...${port}`));

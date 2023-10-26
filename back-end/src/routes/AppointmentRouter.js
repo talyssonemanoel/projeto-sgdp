@@ -204,7 +204,6 @@ router.get('/GetServicesByDoctorKey', async (req, res) => {
         // Execute a consulta no banco de dados
         const cursor = await db.query(query);
         const services = await cursor.all();
-        console.log(services)
         // Envie os documentos encontrados como resposta
         res.json(services);
     } catch (error) {

@@ -8,6 +8,7 @@ const dbUser = process.env.DB_USER;
 const dbPass = process.env.DB_PASS;
 const userMail = process.env.USER_MAIL;
 const passMail = process.env.PASS_MAIL;
+const ipLocal = process.env.IP_LOCAL;
 
 // Configurações do JWT
 const secret = process.env.SECRET;
