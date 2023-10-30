@@ -120,7 +120,6 @@ router.get('/search/:query', verifyAdminPermission, async (req, res) => {
           FILTER doctor._key == ${queryValue} ||
           LIKE(doctor.name, CONCAT(${queryValue}, '%'), true) ||
                  doctor.cpf == ${queryValue} ||
-                 doctor.crm == ${queryValue} ||
                  doctor.residente == ${queryValue}
           RETURN doctor
       `;
