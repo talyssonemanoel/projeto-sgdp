@@ -5,7 +5,7 @@ const { Database, aql } = require('arangojs');
 const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
-const { verifyAdminPermission } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
+const { verifyAdminPermission, verifyTokenAndUser } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
 const { generateUniqueUsername, generateRandomPassword, sendLoginCredentials } = require('./OtherFunctions');
 
 // Importar as configurações do banco de dados
@@ -195,7 +195,7 @@ router.put('/:key', verifyAdminPermission, async (req, res) => {
 });
 
 // Rota para buscar médicos ao vivo
-router.get('/livesearch', async (req, res) => {
+router.get('/livesearch', verifyTokenAndUser, async (req, res) => {
     try {
         // Obter a consulta de busca do parâmetro de consulta 'q'
         const query = req.query.q;
