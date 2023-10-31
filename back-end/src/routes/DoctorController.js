@@ -4,8 +4,7 @@ const router = express.Router();
 const { Database, aql } = require('arangojs');
 const bcrypt = require('bcrypt');
 
-const jwt = require('jsonwebtoken');
-const { verifyAdminPermission, verifySimplesAuth } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
+const { verifyAvancadoAuth, verifySimplesAuth } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
 const { generateUniqueUsername, generateRandomPassword, sendLoginCredentials } = require('./OtherFunctions');
 
 // Importar as configurações do banco de dados
@@ -24,7 +23,7 @@ app.use(express.json());
 const collectionName = 'Person';
 
 // Rota para adicionar funcionários com verificação de autenticação
-router.post('/add', verifyAdminPermission, async (req, res) => {
+router.post('/add', verifyAvancadoAuth, async (req, res) => {
     try {
         const requiredFields = ['Nome', 'OcupacaoAmbulatorio', 'email'];
         for (const field of requiredFields) {
@@ -33,12 +32,13 @@ router.post('/add', verifyAdminPermission, async (req, res) => {
             }
         }
 
-        const { Nome, OcupacaoAmbulatorio, specialtyId, patientId, email } = req.body;
+        const { Nome, OcupacaoAmbulatorio, CPF, specialtyId, patientId, Email } = req.body;
 
         let employeeData = {
             Nome,
             OcupacaoAmbulatorio,
-            email, // Adicione o campo de email para Employees
+            CPF,
+            Email, // Adicione o campo de email para Employees
         };
 
         if (OcupacaoAmbulatorio === 'Gerenciador') {
@@ -77,7 +77,7 @@ router.post('/add', verifyAdminPermission, async (req, res) => {
         res.status(201).json({ message: 'Funcionário adicionado com sucesso', result });
 
         // Envie um email com as credenciais de login
-        await sendLoginCredentials(email, username, password);
+        await sendLoginCredentials(Email, username, password);
     } catch (error) {
         console.error('Erro ao adicionar funcionário:', error);
         res.status(500).json({ error: 'Erro ao adicionar funcionário' });
@@ -86,7 +86,7 @@ router.post('/add', verifyAdminPermission, async (req, res) => {
 
 
 // Rota para buscar todos os médicos
-router.get('/search', verifyAdminPermission, async (req, res) => {
+router.get('/search', verifyAvancadoAuth, async (req, res) => {
     try {
         const query = aql`
         FOR doctor IN Person
@@ -103,7 +103,7 @@ router.get('/search', verifyAdminPermission, async (req, res) => {
     }
 });
 
-router.get('/search/:query', verifyAdminPermission, async (req, res) => {
+router.get('/search/:query', verifyAvancadoAuth, async (req, res) => {
     try {
         const queryValue = req.params.query; // Valor da busca na URL
 
@@ -128,7 +128,7 @@ router.get('/search/:query', verifyAdminPermission, async (req, res) => {
 });
 
 // Rota para excluir um especialista por _key
-router.delete('/:key', verifyAdminPermission, async (req, res) => {
+router.delete('/:key', verifyAvancadoAuth, async (req, res) => {
     try {
         const key = req.params.key; // Obtém o _key a partir dos parâmetros da URL
 
@@ -168,7 +168,7 @@ router.delete('/:key', verifyAdminPermission, async (req, res) => {
 });
 
 // Rota para editar um especialista por _key
-router.put('/:key', verifyAdminPermission, async (req, res) => {
+router.put('/:key', verifyAvancadoAuth, async (req, res) => {
     try {
         const key = req.params.key; // Obtém o _key a partir dos parâmetros da URL
         const updatedData = req.body; // Dados atualizados a partir do corpo da requisição

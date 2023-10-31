@@ -14,7 +14,7 @@ const db = new Database({
 
 const app = express();
 const router = express.Router();
-const { verifySimplesAuth, verifyAdminPermission, getUserById} = require('./authMiddleware');
+const { verifySimplesAuth, verifyAvancadoAuth, getUserById} = require('./authMiddleware');
 
 router.post('/reset-password', verifySimplesAuth, async (req, res) => {
   try {
@@ -52,7 +52,7 @@ router.get('/', verifySimplesAuth, (req, res) => {
   res.json({ user: req.user, token: req.query.token });
 });
 
-router.get('/admin', verifyAdminPermission, (req, res) => {
+router.get('/admin', verifyAvancadoAuth, (req, res) => {
   // Retornar alguma informação sobre o usuário ou sobre o token
   res.json({ user: req.user, token: req.query.token });
 });

@@ -69,7 +69,7 @@ async function getUserById(userId) {
   }
 }
 
-async function verifyAdminPermission(req, res, next) {
+async function verifyAvancadoAuth(req, res, next) {
   const token = req.query.token;
 
   if (!token) {
@@ -87,8 +87,8 @@ async function verifyAdminPermission(req, res, next) {
 
     const user = await getUserById(userId);
 
-    if (user.admin === true) {
-      // Se o usuário for administrador, continue para a próxima função de middleware
+    if (user && user.Privilegios === 'Avancado') {
+      // Se o usuário tiver o atributo 'Privilegios' igual a 'Avancado', continue para a próxima função de middleware
       next();
     } else {
       return res.status(403).json({ error: 'Acesso não autorizado!' });
@@ -109,6 +109,6 @@ module.exports = {
   getUserById,
   revokeToken,
   isTokenRevoked,
-  verifyAdminPermission,
+  verifyAvancadoAuth,
   router
 };
