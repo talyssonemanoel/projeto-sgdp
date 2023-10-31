@@ -25,17 +25,18 @@ const collectionName = 'Person';
 // Rota para adicionar funcionários com verificação de autenticação
 router.post('/add', verifyAvancadoAuth, async (req, res) => {
     try {
-        const requiredFields = ['Nome', 'OcupacaoAmbulatorio', 'email'];
+        const requiredFields = ['Nome', 'CPF', 'OcupacaoAmbulatorio', 'email'];
         for (const field of requiredFields) {
             if (!req.body[field]) {
                 return res.status(400).json({ error: `Campo '${field}' é obrigatório.` });
             }
         }
 
-        const { Nome, OcupacaoAmbulatorio, CPF, specialtyId, patientId, Email } = req.body;
+        const { Nome, Endereco, OcupacaoAmbulatorio, CPF, specialtyId, patientId, Email } = req.body;
 
         let employeeData = {
             Nome,
+            Endereco,
             OcupacaoAmbulatorio,
             CPF,
             Email, // Adicione o campo de email para Employees
@@ -84,48 +85,47 @@ router.post('/add', verifyAvancadoAuth, async (req, res) => {
     }
 });
 
-
-// Rota para buscar todos os médicos
-router.get('/search', verifyAvancadoAuth, async (req, res) => {
+/* (SEM USO) router.get('/search', verifyAvancadoAuth, async (req, res) => {
     try {
         const query = aql`
-        FOR doctor IN Person
-        FILTER !IS_NULL(doctor.residente)
-          RETURN doctor
-      `;
+            FOR employee IN Employees
+            LET employeeData = UNSET(employee, "password")
+            RETURN employeeData
+        `;
         const cursor = await db.query(query);
-        const doctors = await cursor.all();
+        const employees = await cursor.all();
 
-        res.json(doctors);
+        res.json(employees);
     } catch (error) {
-        console.error('Erro ao buscar médicos:', error);
-        res.status(500).json({ error: 'Erro ao buscar médicos' });
+        console.error('Erro ao buscar funcionários:', error);
+        res.status(500).json({ error: 'Erro ao buscar funcionários' });
     }
-});
+}); */
 
 router.get('/search/:query', verifyAvancadoAuth, async (req, res) => {
     try {
         const queryValue = req.params.query; // Valor da busca na URL
 
-        // Constrói a consulta AQL para buscar um médico por ID, nome, CPF, CRM ou residente
+        // Constrói a consulta AQL para buscar um funcionário por ID, Nome, CPF ou OcupacaoAmbulatorio
         const query = aql`
-        FOR doctor IN Person
-          FILTER doctor._key == ${queryValue} ||
-          LIKE(doctor.name, CONCAT(${queryValue}, '%'), true) ||
-                 doctor.cpf == ${queryValue} ||
-                 doctor.residente == ${queryValue}
-          RETURN doctor
-      `;
+            FOR employee IN Employees
+            FILTER employee._key == ${queryValue} ||
+                   LIKE(employee.Nome, CONCAT(${queryValue}, '%'), true) ||
+                   employee.Cpf == ${queryValue} ||
+                   LIKE(employee.OcupacaoAmbulatorio, CONCAT(${queryValue}, '%'), true)
+            RETURN employee
+        `;
 
         const cursor = await db.query(query);
-        const doctors = await cursor.all();
+        const employees = await cursor.all();
 
-        res.json(doctors);
+        res.json(employees);
     } catch (error) {
-        console.error('Erro ao buscar médico:', error);
-        res.status(500).json({ error: 'Erro ao buscar médico' });
+        console.error('Erro ao buscar funcionário:', error);
+        res.status(500).json({ error: 'Erro ao buscar funcionário' });
     }
 });
+
 
 // Rota para excluir um especialista por _key
 router.delete('/:key', verifyAvancadoAuth, async (req, res) => {
