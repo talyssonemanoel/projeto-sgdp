@@ -5,6 +5,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import api from "../services/api";
 import "../css/EspecialistaPesquisa.css";
 
+// INTRODUÇÃO
+
 const EspecialistaPesquisa = () => {
   const [employees, setEmployees] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,6 +21,8 @@ const EspecialistaPesquisa = () => {
     Email: "",
   });
 
+  // DECLARAÇÃO DE VARIÁVEIS
+
   const { query } = useParams;
 
   const debounce = (func, delay) => {
@@ -31,7 +35,9 @@ const EspecialistaPesquisa = () => {
   };
 
   const handleShowModal = () => setShowModal(true);
+
   const handleCloseModal = () => setShowModal(false);
+
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -39,6 +45,7 @@ const EspecialistaPesquisa = () => {
       [name]: value,
     });
   };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -51,6 +58,8 @@ const EspecialistaPesquisa = () => {
       // Trate os erros apropriadamente
     }
   };
+
+  // PESQUISA DE EMPREGADOS
 
   const fetchEmployees = async (query) => {
     try {
@@ -95,6 +104,8 @@ const EspecialistaPesquisa = () => {
     }
   };
 
+  //PESQUISA EM TEMPO REAL
+
   const delayedSearch = debounce((query) => {
     fetchEmployees(query);
   }, 300);
@@ -112,6 +123,8 @@ const EspecialistaPesquisa = () => {
     setNoResultsMessage("");
     delayedSearch(value);
   };
+
+  // HTML DE VISUAL
 
   return (
     <div className="container-especialista">
