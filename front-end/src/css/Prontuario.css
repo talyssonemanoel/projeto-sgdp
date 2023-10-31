@@ -4,24 +4,24 @@
 
 .body-prontuario {
     background-color: #f2f2f2;
-    height: 100%;
+    min-height: 557px;
     padding-top: 12px;
     padding-bottom: 12px;
-    padding-left: 12px;
+    width: 1200px;
+    flex: 1;
+    height: auto;
 }
 
 .cabecalho-prontuario {
     background-color: white;
     padding: 12px;
-    margin-right: 12px;
     border-style: solid;
     border-color: rgba(0, 0, 0, 0.176);
     border-width: 1px;
     border-radius: 5px;
     margin-bottom: 10px;
+    width: auto
 }
-
-
 
 .card-text {
     min-width: 800px;
@@ -32,13 +32,48 @@
     padding: 0px;
     margin: 0px;
     max-height: 75px;
-    max-width: 48px;
-    min-width: 48px;
+    max-width: 48px; 
 }
 
-.body-do-card {
-    
+.lines {
+    padding: 0;
 }
+
+.lines1 {
+    margin-left: 3px;
+}
+
+.menu-left {
+    padding-top: 10px;
+    text-align: center;
+    width: 200px;
+    height: 100%;
+    background-color: #f2f2f2;
+    border-right-style:solid;
+    border-right-color: rgba(0, 0, 0, 0.176);
+    border-right-width: 1px;
+    flex: 0 0 auto; /* Faz com que a div menuu tenha uma largura fixa e não cresça verticalmente */
+  }
+
+  .btn-menu-l {
+    background-color: transparent;
+    min-height: 10px;
+    border-width: 0px;
+  }
+
+  .selected {
+    border-color: #005eff;
+    border-left-color: #005eff;
+    border-left-width: 6px;
+    border-left-style: solid;
+    background-color: white;
+    padding-left: 0px;
+  }
+  .p-content {
+    width: auto;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
 
 .ano-text {
     font-size: small;
@@ -76,4 +111,11 @@
 
 .input-container {
     padding: 0 10px 10px 10px;
+}
+
+/* COMPONENTE BuscarPaciente.js*/
+.btn-amb {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 10px;
 }

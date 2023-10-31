@@ -15,6 +15,7 @@ const db = new Database({
     auth: { username: dbUser, password: dbPass },
 });
 
+
 // Middleware para permitir o uso do JSON no corpo da requisição
 app.use(express.json());
 
@@ -211,6 +212,37 @@ router.get('/GetServicesByDoctorKey', async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar serviços por doctorId' });
     }
 });
+
+router.get('/GetServicesByPatientKey', async (req, res) => {
+    try {
+        // Obter o valor do parâmetro patientKey da consulta
+        const patientID = req.query.q;
+
+        // Verifique se o parâmetro patientKey foi fornecido na consulta
+        if (!patientID) {
+            return res.status(400).json({ error: 'O parâmetro patientID é obrigatório.' });
+        }
+
+        // Construa uma consulta AQL para buscar documentos na coleção Atendimentos onde _from corresponde ao patientKey
+        const query = aql`
+            FOR atendimento IN Service
+            FILTER atendimento.patientId == ${patientID}
+            RETURN atendimento
+        `;
+
+        // Execute a consulta no banco de dados
+        const cursor = await db.query(query);
+        const atendimentos = await cursor.all();
+        console.log(query.query);
+
+        // Envie os documentos encontrados como resposta
+        res.json(atendimentos);
+    } catch (error) {
+        console.error('Erro ao buscar atendimentos por patientKey:', error);
+        res.status(500).json({ error: 'Erro ao buscar atendimentos por patientKey' });
+    }
+});
+
 
 
 

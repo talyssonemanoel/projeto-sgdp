@@ -4,7 +4,7 @@ import api from "../services/api";
 import * as bootstrap from 'bootstrap';
 import '../css/ModalAgendamento.css';
 
-const ModalAgendamento = ({ onSave }) => {
+const ModalAgendamento = () => {
   const [activeButton, setActiveButton] = useState(null);
   const [selectedEspecialista, setSelectedEspecialista] = useState(null);
   const [selectedPaciente, setSelectedPaciente] = useState(null);
@@ -91,7 +91,6 @@ const ModalAgendamento = ({ onSave }) => {
       try {
         const response = await api.post('/agendar/add', data);
         console.log('Dados enviados com sucesso:', response.data);
-        onSave();
         var myModalEl = document.getElementById('exampleModal')
         var modal = bootstrap.Modal.getInstance(myModalEl)
         modal.hide()

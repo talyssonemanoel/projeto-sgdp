@@ -9,6 +9,7 @@ import Select from 'react-select';
 import api from "../services/api";
 import ColorHash from 'color-hash';
 import ModalAgendamento from '../components/ModalAgendamento'; // Importe o componente de modal
+
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-calendar/dist/Calendar.css'; 
 import '../css/AgendamentoAgendar.css';
@@ -19,13 +20,25 @@ const AgendamentoAgendar = () => {
   const [options, setOptions] = useState([]);
   const [selectedDoctors, setSelectedDoctors] = useState([]);
   const [events, setEvents] = useState([]);
+  const dateStartTimeMap = {};
+  
   const colorHash = new ColorHash();
+  let startTime = '18:00';
+  let endTime = null;
   
   useEffect(() => {
     // Carrega as opções iniciais
     loadOptions("");
     console.log()
   }, []);
+
+  const addMinutes = (time, minutes) => {
+    const [hours, mins] = time.split(':').map(Number);
+    const totalMinutes = hours * 60 + mins + minutes;
+    const newHours = Math.floor(totalMinutes / 60);
+    const newMinutes = totalMinutes % 60;
+    return `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}`;
+  };
 
   const fullCalendarRef = React.useRef();
 
@@ -63,13 +76,26 @@ const AgendamentoAgendar = () => {
       // Busca os agendamentos do médico selecionado
       const response = await api.get('/agendar/GetServicesByDoctorKey', { params: { doctorKey: selectedDoctor.value } });
       const doctorAppointments = response.data.map(appointment => {
-        // Combina a data e a hora em uma string ISO 8601
-        const start = `${appointment.date}T${appointment.startDateTime}:00`;
-        const end = `${appointment.date}T${appointment.endDateTime}:00`;
-      
+        const selectedDateStr = appointment.date; // Obtenha a data do agendamento
+        
+        // Verifique se a data já existe no objeto dateStartTimeMap
+        if (!dateStartTimeMap[selectedDateStr]) {
+          dateStartTimeMap[selectedDateStr] = '18:00'; // Se não existir, defina o horário de início para '18:00'
+        }
+        
+        let start = dateStartTimeMap[selectedDateStr]; // Obtenha o horário de início para a data
+  
+        // Calcule o horário de fim
+        const endTime = addMinutes(start, 15);
+  
+        // Atualize o horário de início para a próxima vez
+        dateStartTimeMap[selectedDateStr] = endTime;
+  
+        const end = `${appointment.date}T${endTime}:00`;
+  
         return {
           title: appointment.patientName,
-          start: start,
+          start: `${appointment.date}T${start}:00`,
           end: end,
           doctorKey: selectedDoctor.value,
           // Use a cor gerada para o médico
@@ -99,7 +125,9 @@ const AgendamentoAgendar = () => {
   
     return (
       <li className="list-group-item" >
-        <span className="doctor-color-dot" style={dotStyle}></span>
+        <div>
+          <span className="doctor-color-dot" style={dotStyle}></span>
+        </div>
         <div className="doctor-name">
           {doctor.label}
         </div>
@@ -115,6 +143,32 @@ const AgendamentoAgendar = () => {
 
     );
   };
+
+const updateAppointments = async () => {
+  const newEvents = [];
+  for (const doctor of selectedDoctors) {
+    const response = await api.get('/agendar/GetServicesByDoctorKey', { params: { doctorKey: doctor.value } });
+    const doctorAppointments = response.data.map(appointment => {
+      const selectedDateStr = appointment.date;
+      if (!dateStartTimeMap[selectedDateStr]) {
+        dateStartTimeMap[selectedDateStr] = '18:00';
+      }
+      let start = dateStartTimeMap[selectedDateStr];
+      const endTime = addMinutes(start, 15);
+      dateStartTimeMap[selectedDateStr] = endTime;
+      const end = `${appointment.date}T${endTime}:00`;
+      return {
+        title: appointment.patientName,
+        start: `${appointment.date}T${start}:00`,
+        end: end,
+        doctorKey: doctor.value,
+        color: doctor.color,
+      };
+    });
+    newEvents.push(...doctorAppointments);
+  }
+  setEvents(newEvents);
+};
   
 
   const handleRemoveDoctor = (doctorToRemove) => {
@@ -128,7 +182,7 @@ const AgendamentoAgendar = () => {
 
   return (
     <div className="calendar-container">
-      <ModalAgendamento />
+      <ModalAgendamento onSave={updateAppointments} />
       <style>
         {`
           .main-content {
@@ -165,6 +219,29 @@ const AgendamentoAgendar = () => {
           .list-group-item {        
             padding-bottom: 3px;
             padding-top: 3px;
+          }
+          .fc .fc-timegrid-axis-cushion, .fc .fc-timegrid-slot-label-cushion {
+            height: 60px;
+            line-height: 60px;
+          }
+          .fc-direction-ltr .fc-timegrid-slot-label-frame {
+            text-align: center;
+          }
+          .list-group-item {
+            display: flex;
+            align-items: center;
+          }
+          .doctor-name {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .mb-3 {
+            margin-bottom: 7px!important;
+          }
+          .calendar-container {
+            box-shadow: 0 2px 4px rgba(5, 5, 5, 5);
           }
         `}
       </style>
@@ -221,8 +298,8 @@ const AgendamentoAgendar = () => {
             meridiem: false,
             hour12: false
           }}
-          //slotLabelInterval="00:30:00" // Define o intervalo para 15 minutos
-          //slotDuration="00:30:00"
+          slotLabelInterval="00:30:00" // Define o intervalo para 15 minutos
+          slotDuration="00:30:00"      // Define a duração do slot como 15 minutos
           scrollTime={'18:00:00'}
           allDaySlot={false}
         />

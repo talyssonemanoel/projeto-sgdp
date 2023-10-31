@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AsyncSelect from 'react-select/async';
 
 const BuscarPaciente = ({ selectedPaciente, loadPacienteOptions, handlePacienteInputChange, handlePacienteChange, handlePacienteClear }) => {
+  const [activeButton, setActiveButton] = useState(null);
+
+  const handleButtonClick = (button) => {
+    if (activeButton === button) {
+      setActiveButton(null);
+    } else {
+      setActiveButton(button);
+    }
+  };
+
   return (
     <div className="body-buscar-paciente">
       <div className="block-body">
@@ -12,6 +22,24 @@ const BuscarPaciente = ({ selectedPaciente, loadPacienteOptions, handlePacienteI
             `}
         </style>
         <div className="block-input">
+            <div className="btn-group d-flex btn-amb" role="group">
+              <button
+                type="button"
+                className={`btn ${activeButton === 'left' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => handleButtonClick('left')}
+                style={{ flex: 1 }}
+              >
+                Ambulatório Geral
+              </button>
+              <button
+                type="button"
+                className={`btn ${activeButton === 'right' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => handleButtonClick('right')}
+                style={{ flex: 1 }}
+              >
+                Ambulatório LGBT
+              </button>
+            </div>
           <div className="titulo-input">
             Buscar paciente
           </div>
