@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const router = express.Router();
 const { Database , aql } = require('arangojs');
-const { verifyTokenAndUser } = require('../../middlewares/authMiddleware');
+const { verifySimplesAuth } = require('../../middlewares/authMiddleware');
 const { getPersonByKey, getIdForRealDoctorByKey, getSpecialtyIdByName } = require('./OtherFunctions');
 
 // Importar as configurações do banco de dados
@@ -73,7 +73,7 @@ router.post('/add', async (req, res) => {
     }
 });
 
-router.get('/all', verifyTokenAndUser, async (req, res) => {
+router.get('/all', verifySimplesAuth, async (req, res) => {
     try {
         const query = aql`
             FOR appointment IN Service
@@ -92,7 +92,7 @@ router.get('/all', verifyTokenAndUser, async (req, res) => {
 });
 
 // Rota para obter agendamentos por _key ou cpf do paciente ou data ou id da especialidade médica
-router.get('/search', verifyTokenAndUser, async (req, res) => {
+router.get('/search', verifySimplesAuth, async (req, res) => {
     try {
         const { key, cpf, date, specialtyId, name } = req.query;
 
@@ -154,7 +154,7 @@ router.get('/search', verifyTokenAndUser, async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar agendamentos' });
     }
 });
-router.put('/cancel/:appointmentId', verifyTokenAndUser, async (req, res) => {
+router.put('/cancel/:appointmentId', verifySimplesAuth, async (req, res) => {
     try {
         const { appointmentId } = req.params;
 

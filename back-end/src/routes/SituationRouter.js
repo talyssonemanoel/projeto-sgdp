@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Database } = require('arangojs');
-const { verifyTokenAndUser } = require('../../middlewares/authMiddleware');
+const { verifySimplesAuth } = require('../../middlewares/authMiddleware');
 
 // Importar as configurações do banco de dados
 const { dbUrl, dbName, dbUser, dbPass } = require('../../config');
@@ -19,7 +19,7 @@ router.use(express.json());
 const collectionName = 'Situation';
 
 // Rota para adicionar uma folha de estado associada a um agendamento
-router.post('/add/:appointmentId', verifyTokenAndUser, async (req, res) => {
+router.post('/add/:appointmentId', verifySimplesAuth, async (req, res) => {
     try {
         const { appointmentId } = req.params;
         const { description, medications } = req.body;

@@ -3,7 +3,7 @@ const app = express();
 const router = express.Router();
 const { Database, aql } = require('arangojs');
 const jwt = require('jsonwebtoken');
-const { verifyTokenAndUser } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
+const { verifySimplesAuth } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
 
 // Importar as configurações do banco de dados
 const { dbUrl, dbName, dbUser, dbPass } = require('../../config');
@@ -21,7 +21,7 @@ app.use(express.json());
 const collectionName = 'Person';
 
 // Rota para adicionar um paciente
-router.post('/add', verifyTokenAndUser, async (req, res) => {
+router.post('/add', verifySimplesAuth, async (req, res) => {
     try {
         const {
             Nome, // Modifique 'name' para 'Nome'
@@ -61,7 +61,7 @@ router.post('/add', verifyTokenAndUser, async (req, res) => {
 });
 
 // Rota para buscar todos os pacientes
-router.get('/search', verifyTokenAndUser, async (req, res) => {
+router.get('/search', verifySimplesAuth, async (req, res) => {
     try {
         const query = aql`
         FOR person IN Person
@@ -79,7 +79,7 @@ router.get('/search', verifyTokenAndUser, async (req, res) => {
     }
 });
 
-router.get('/search/:query', verifyTokenAndUser, async (req, res) => {
+router.get('/search/:query', verifySimplesAuth, async (req, res) => {
     try {
         const query = req.params.query; // Valor da busca na URL
 
@@ -141,7 +141,7 @@ router.get('/livesearch', async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar médicos' });
     }
 });
-router.put('/update/:id', verifyTokenAndUser, async (req, res) => {
+router.put('/update/:id', verifySimplesAuth, async (req, res) => {
     try {
         const patientId = req.params.id;
         const autorID = req.user.id;

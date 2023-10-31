@@ -5,7 +5,7 @@ const { Database, aql } = require('arangojs');
 const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
-const { verifyAdminPermission, verifyTokenAndUser } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
+const { verifyAdminPermission, verifySimplesAuth } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
 const { generateUniqueUsername, generateRandomPassword, sendLoginCredentials } = require('./OtherFunctions');
 
 // Importar as configurações do banco de dados
@@ -23,71 +23,64 @@ app.use(express.json());
 
 const collectionName = 'Person';
 
-// Rota para adicionar médicos com verificação de autenticação
+// Rota para adicionar funcionários com verificação de autenticação
 router.post('/add', verifyAdminPermission, async (req, res) => {
     try {
-        const requiredFields = [];
+        const requiredFields = ['Nome', 'OcupacaoAmbulatorio', 'email'];
         for (const field of requiredFields) {
             if (!req.body[field]) {
                 return res.status(400).json({ error: `Campo '${field}' é obrigatório.` });
             }
         }
 
-        const doctorData = {
-            Nome: req.body.nome,
-            Cpf: req.body.cpf,
-            Ocupacao: req.body.ocupacao,
-            CarteiraNacionalDeSaude: req.body.sus || '',
-            UBScadastrada: req.body.ubs || '',
-            Telefone: req.body.telefone,
-            specialtyId: req.body.specialtyId, // Vincula o _id da especialidade
-            Endereco: req.body.endereco || '',
-            Bairro: req.body.bairro || '',
-            Email: req.body.email || '',
-            DataDeNascimento: req.body.datadenascimento || '',
-            OrientacaoSexual: req.body.orientacaosexual || '',
-            IdentidadeDeGenero: req.body.identidadedegenero || '',
-            Residente: req.body.residente, // Novo campo residente
+        const { Nome, OcupacaoAmbulatorio, specialtyId, patientId, email } = req.body;
+
+        let employeeData = {
+            Nome,
+            OcupacaoAmbulatorio,
+            email, // Adicione o campo de email para Employees
         };
 
-        // Insere os dados do médico na coleção
-        const result = await db.collection(collectionName).save(doctorData);
+        if (OcupacaoAmbulatorio === 'Gerenciador') {
+            employeeData.Privilegios = 'Avancado';
+        } else if (OcupacaoAmbulatorio === 'Agendador') {
+            employeeData.Privilegios = 'Intermediario';
+        } else {
+            // Para outros casos (Especialistas, Vacinacao, etc.)
+            employeeData.Privilegios = 'Simples';
+        }
 
-        // Obtém o _id do médico criado
-        const doctorId = result._id;
-        
-        // Gerar o atributo 'username' com base no nome
-        const username = await generateUniqueUsername(req.body.nome);
+        if (specialtyId) {
+            employeeData.specialtyId = specialtyId;
+        }
 
-        // Gerar uma senha aleatória
+        if (patientId) {
+            employeeData.patientId = patientId;
+        }
+
+        // Gere o atributo 'username' com base no nome
+        const username = await generateUniqueUsername(Nome);
+
+        // Gere uma senha aleatória
         const password = generateRandomPassword();
 
-        // Criar um hash da senha usando bcrypt
+        // Crie um hash da senha usando bcrypt
         const hashedPassword = await bcrypt.hash(password, 10); // Use o valor de salt apropriado
 
-        // Dados do usuário a serem inseridos na coleção 'usuarios'
-        const userData = {
-            username: username,
-            password: hashedPassword, // Salva o hash da senha
-            email: req.body.email, // Email do especialista
-            doctorId: doctorId, // Vincula o _id do médico
-        };
+        // Adicione 'username' e 'password' diretamente na coleção 'Employees'
+        employeeData.username = username;
+        employeeData.password = hashedPassword;
 
-        // Insere os dados do usuário na coleção 'usuarios'
-        const userResult = await db.collection('usuarios').save(userData);
+        // Insira os dados do funcionário na coleção 'Employees'
+        const result = await db.collection('Employees').save(employeeData);
 
-        // Atualize o atributo 'personId' na coleção 'Person' para vincular ao _id do usuário
-        const personUpdateResult = await db.collection(collectionName).update(doctorId, {
-            personId: userResult._id
-        });
-
-        res.status(201).json({ message: 'Especialista adicionado com sucesso', result });
+        res.status(201).json({ message: 'Funcionário adicionado com sucesso', result });
 
         // Envie um email com as credenciais de login
-        await sendLoginCredentials(req.body.email, username, password);
+        await sendLoginCredentials(email, username, password);
     } catch (error) {
-        console.error('Erro ao adicionar especialista:', error);
-        res.status(500).json({ error: 'Erro ao adicionar especialista' });
+        console.error('Erro ao adicionar funcionário:', error);
+        res.status(500).json({ error: 'Erro ao adicionar funcionário' });
     }
 });
 
@@ -195,7 +188,7 @@ router.put('/:key', verifyAdminPermission, async (req, res) => {
 });
 
 // Rota para buscar médicos ao vivo
-router.get('/livesearch', verifyTokenAndUser, async (req, res) => {
+router.get('/livesearch', verifySimplesAuth, async (req, res) => {
     try {
         // Obter a consulta de busca do parâmetro de consulta 'q'
         const query = req.query.q;
