@@ -25,7 +25,7 @@ const collectionName = 'Person';
 // Rota para adicionar funcionários com verificação de autenticação
 router.post('/add', verifyAvancadoAuth, async (req, res) => {
     try {
-        const requiredFields = ['Nome', 'CPF', 'OcupacaoAmbulatorio', 'email'];
+        const requiredFields = ['Nome', 'CPF', 'OcupacaoAmbulatorio', 'Email'];
         for (const field of requiredFields) {
             if (!req.body[field]) {
                 return res.status(400).json({ error: `Campo '${field}' é obrigatório.` });
@@ -85,7 +85,7 @@ router.post('/add', verifyAvancadoAuth, async (req, res) => {
     }
 });
 
-/* (SEM USO) router.get('/search', verifyAvancadoAuth, async (req, res) => {
+router.get('/search', verifyAvancadoAuth, async (req, res) => {
     try {
         const query = aql`
             FOR employee IN Employees
@@ -100,7 +100,7 @@ router.post('/add', verifyAvancadoAuth, async (req, res) => {
         console.error('Erro ao buscar funcionários:', error);
         res.status(500).json({ error: 'Erro ao buscar funcionários' });
     }
-}); */
+});
 
 router.get('/search/:query', verifyAvancadoAuth, async (req, res) => {
     try {
@@ -111,7 +111,7 @@ router.get('/search/:query', verifyAvancadoAuth, async (req, res) => {
             FOR employee IN Employees
             FILTER employee._key == ${queryValue} ||
                    LIKE(employee.Nome, CONCAT(${queryValue}, '%'), true) ||
-                   employee.Cpf == ${queryValue} ||
+                   employee.CPF == ${queryValue} ||
                    LIKE(employee.OcupacaoAmbulatorio, CONCAT(${queryValue}, '%'), true)
             RETURN employee
         `;
