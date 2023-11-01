@@ -81,7 +81,7 @@ router.get('/SpecialtyNameById/:id', verifySimplesAuth, async (req, res) => {
     }
 }); */
 
-router.get('/all', verifyTokenAndUser, async (req, res) => {
+router.get('/all', verifySimplesAuth, async (req, res) => {
     try {
         const query = aql`
         FOR Specialties IN Specialties
