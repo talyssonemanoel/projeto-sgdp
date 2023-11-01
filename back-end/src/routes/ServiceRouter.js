@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const router = express.Router();
 const { Database } = require('arangojs');
-const { verifyTokenAndUser } = require('../../middlewares/authMiddleware');
+const { verifySimplesAuth } = require('../../middlewares/authMiddleware');
 const { extractAuthorId } = require('./OtherFunctions');
 const jwt = require("jsonwebtoken");
 const aql = require('arangojs').aql;
@@ -17,7 +17,7 @@ const db = new Database({
   auth: { username: dbUser, password: dbPass },
 });
 
-router.put('/:id', verifyTokenAndUser, async (req, res) => {
+router.put('/:id', verifySimplesAuth, async (req, res) => {
   try {
     // Obter o ID do agendamento a ser atualizado a partir dos parâmetros da requisição
     const agendamentoId = req.params.id;
@@ -56,7 +56,7 @@ router.put('/:id', verifyTokenAndUser, async (req, res) => {
   }
 });
 // Rota para adicionar mensagens
-router.post("/messages", verifyTokenAndUser, async (req, res) => {
+router.post("/messages", verifySimplesAuth, async (req, res) => {
   const { mensagem } = req.body;
   const autor = req.user.id; // Obtenha o token JWT do cabeçalho Authorization
 
@@ -79,7 +79,7 @@ router.post("/messages", verifyTokenAndUser, async (req, res) => {
   }
 });
 
-router.get('/messages', verifyTokenAndUser, async (req, res) => {
+router.get('/messages', verifySimplesAuth, async (req, res) => {
   try {
     const query = aql`
       FOR message IN Messages

@@ -1,630 +1,368 @@
 import React, { useState, useEffect } from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { Modal, Button } from "react-bootstrap";
+import { Link, useParams } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
 import api from "../services/api";
-import {
-  Container,
-  Row,
-  Col,
-  Form,
-  Button,
-  Table,
-  Modal,
-} from "react-bootstrap";
 import "../css/EspecialistaPesquisa.css";
 
+// INTRODUÇÃO
+
 const EspecialistaPesquisa = () => {
-  const initialSpecialistState = {
-    name: "",
-    cpf: "",
-    dateOfBirth: "",
-    sex: "",
-    phone: "",
-    email: "",
-    startTime: "",
-    endTime: "",
-    specialtyId: "",
-    residente: "",
+  const [employees, setEmployees] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [noResultsMessage, setNoResultsMessage] = useState(""); // Mensagem de nenhum resultado
+  const [formData, setFormData] = useState({
+    Nome: "",
+    CPF: "",
+    Endereco: "",
+    OcupacaoAmbulatorio: "",
+    Email: "",
+  });
+  const [CPFIsValid, setCPFIsValid] = useState(true);
+
+  // DECLARAÇÃO DE VARIÁVEIS
+
+  const { query } = useParams;
+
+  const debounce = (func, delay) => {
+    let timeout;
+    return function (...args) {
+      const context = this;
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(context, args), delay);
+    };
   };
 
-  const [query, setQuery] = useState("");
-  const [searchBy, setSearchBy] = useState("all");
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedSpecialist, setSelectedSpecialist] = useState(null);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [selectedSpecialistKeyToDelete, setSelectedSpecialistKeyToDelete] = useState(null);
-  const [specialties, setSpecialties] = useState([]);
-  const [specialists, setSpecialists] = useState([]);
-  const [isAdmin, setIsAdmin] = useState(false); // Estado para armazenar a permissão do administrador
-  const [newSpecialist, setNewSpecialist] = useState({ ...initialSpecialistState });
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editedSpecialist, setEditedSpecialist] = useState({ ...initialSpecialistState });
+  // VERIFICA CPF //
 
-  const handleOpenDeleteConfirmation = () => {
-    setShowDeleteConfirmation(true);
+  // Função para formatar CPF no padrão brasileiro (###.###.###-##)
+  const formatCPF = (cpf) => {
+    cpf = cpf.replace(/\D/g, ''); // Remove caracteres não numéricos
+    if (cpf.length !== 11) {
+      return cpf; // Retorna o CPF como está se não tiver 11 dígitos
+    }
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
-  const handleCloseDeleteConfirmation = () => {
-    setShowDeleteConfirmation(false);
+  // Função para validar CPF
+  const validateCPF = (cpf) => {
+    cpf = cpf.replace(/\D/g, ''); // Remove caracteres não numéricos
+    if (cpf.length !== 11) {
+      return false;
+    }
+
+    let sum = 0;
+    let remainder;
+
+    for (let i = 1; i <= 9; i++) {
+      sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    }
+
+    remainder = (sum * 10) % 11;
+
+    if (remainder === 10 || remainder === 11) {
+      remainder = 0;
+    }
+
+    if (remainder !== parseInt(cpf.substring(9, 10))) {
+      return false;
+    }
+
+    sum = 0;
+    for (let i = 1; i <= 10; i++) {
+      sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    }
+
+    remainder = (sum * 10) % 11;
+
+    if (remainder === 10 || remainder === 11) {
+      remainder = 0;
+    }
+
+    if (remainder !== parseInt(cpf.substring(10, 11))) {
+      return false;
+    }
+
+    return true;
   };
 
-  const handleOpenAddModal = () => {
-    setShowAddModal(true);
+  // FIM DO VERIFICA CPF //
+
+  const handleShowModal = () => {
+    setShowModal(true);
+    // Limpe os campos do formulário ao abrir o modal
+    setFormData({
+      Nome: "",
+      CPF: "",
+      Endereco: "",
+      OcupacaoAmbulatorio: "",
+      Email: "",
+    });
   };
 
-  const handleCloseAddModal = () => {
-    setShowAddModal(false);
-    setNewSpecialist({ ...initialSpecialistState });
+  const handleCloseModal = () => {
+    setShowModal(false);
+    // Limpe os campos do formulário ao fechar o modal
+    setFormData({
+      Nome: "",
+      CPF: "",
+      Endereco: "",
+      OcupacaoAmbulatorio: "",
+      Email: "",
+    });
   };
 
-  const handleAddFieldChange = (e) => {
+
+  const handleFormChange = (e) => {
     const { name, value } = e.target;
-    const newValue = name === "residente" ? value === "true" : value;
-    setNewSpecialist({ ...newSpecialist, [name]: newValue });
+
+    if (name === "CPF") {
+      const formattedCPF = formatCPF(value);
+      setFormData({
+        ...formData,
+        [name]: formattedCPF,
+      });
+
+      // Verifique se o CPF é válido e atualize um estado de validação
+      const isValidCPF = validateCPF(value);
+      setCPFIsValid(isValidCPF);
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
-  const requiredFields = ["name", "cpf", "phone", "specialtyId"];
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
-  const handleAddSpecialist = async () => {
+    if (!CPFIsValid) {
+      // Impedir o envio do formulário se o CPF não for válido
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
+      const response = await api.post(`/doctors/add?token=${token}`, formData);
+      // Lide com a resposta da adição do funcionário, se necessário
+      handleCloseModal(); // Feche o modal após o envio bem-sucedido
 
-      for (const field of requiredFields) {
-        if (!newSpecialist[field]) {
-          alert(`Campo '${field}' é obrigatório.`);
-          return;
-        }
-      }
-
-      console.log(newSpecialist);
-      const response = await api.post(`/doctors/add?token=${token}`, newSpecialist);
-
-      if (response.status === 201) {
-        fetchSpecialists();
-        handleCloseAddModal();
-      } else {
-        console.error("Falha ao adicionar especialista:", response);
-      }
+      // Após a adição bem-sucedida, atualize a lista de funcionários
+      fetchEmployees(searchQuery);
     } catch (error) {
-      console.error("Erro ao adicionar especialista:", error);
+      console.error("Erro ao adicionar funcionário:", error);
+      // Trate os erros apropriadamente
     }
   };
 
-  const handleEditFieldChange = (e) => {
-    const { name, value } = e.target;
-    const newValue = name === "residente" ? (value === "" ? "" : value === "true") : value;
 
-    setEditedSpecialist({ ...editedSpecialist, [name]: newValue });
-  };
+  // PESQUISA DE EMPREGADOS
 
-  const handleSaveEdit = async () => {
+  const fetchEmployees = async (query) => {
     try {
+      setIsLoading(true);
       const token = localStorage.getItem("token");
-      const updatedFields = {};
+      const response = await api.get(`/doctors/search/${query}?token=${token}`);
+      const results = response.data;
 
-      for (const field in editedSpecialist) {
-        if (editedSpecialist[field] !== newSpecialist[field]) {
-          updatedFields[field] = editedSpecialist[field];
-        }
-      }
-
-      if (Object.keys(updatedFields).length === 0) {
-        handleCloseEditModal();
-        return;
-      }
-
-      const response = await api.put(`/doctors/${selectedSpecialist._key}?token=${token}`, updatedFields);
-
-      if (response.status === 200) {
-        fetchSpecialists();
-        handleCloseEditModal();
+      if (results.length === 0) {
+        setNoResultsMessage("Não foram encontrados especialistas");
       } else {
-        console.error("Falha ao editar especialista:", response);
+        setNoResultsMessage("");
       }
+
+      // Preencher campos vazios com 'Sem dados' em vermelho
+      const employeesWithSemDados = results.map((employee) => ({
+        ...employee,
+        Nome: employee.Nome || <span style={{ color: "red" }}>Sem dados</span>,
+        OcupacaoAmbulatorio: employee.OcupacaoAmbulatorio || (
+          <span style={{ color: "red" }}>Sem dados</span>
+        ),
+        CPF: employee.CPF || <span style={{ color: "red" }}>Sem dados</span>,
+        Email: employee.Email || (
+          <span style={{ color: "red" }}>Sem dados</span>
+        ),
+        specialtyId: employee.specialtyId || (
+          <span style={{ color: "red" }}>Sem dados</span>
+        ),
+        Privilegios: employee.Privilegios || (
+          <span style={{ color: "red" }}>Sem dados</span>
+        ),
+        username: employee.username || (
+          <span style={{ color: "red" }}>Sem dados</span>
+        ),
+      }));
+
+      setEmployees(employeesWithSemDados);
     } catch (error) {
-      console.error("Erro ao editar especialista:", error);
+      console.error("Erro ao buscar funcionários:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  async function fetchSpecialties() {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await api.get(`/especialidade/all?token=${token}`);
-      if (response.status === 200) {
-        setSpecialties(response.data);
-      } else {
-        console.error("Erro ao buscar especialidades:", response);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar especialidades:", error);
-    }
-  }
+  //PESQUISA EM TEMPO REAL
 
-  fetchSpecialties();
-
-  function findSpecialtyNameById(specialtyId) {
-    const specialty = specialties.find((s) => s._id === specialtyId);
-    return specialty ? specialty.name : "";
-  }
-
-  // Renderização dos campos de edição dentro do Modal.Body
-  const renderEditFields = () => {
-    return (
-      <Form>
-        <Form.Group controlId="name">
-          <Form.Label>Nome</Form.Label>
-          <Form.Control
-            type="text"
-            name="name"
-            value={editedSpecialist.name}
-            onChange={handleEditFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="cpf">
-          <Form.Label>CPF</Form.Label>
-          <Form.Control
-            type="text"
-            name="cpf"
-            value={editedSpecialist.cpf}
-            onChange={handleEditFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="dateOfBirth">
-          <Form.Label>Data de Nascimento</Form.Label>
-          <Form.Control
-            type="date"
-            name="dateOfBirth"
-            value={editedSpecialist.dateOfBirth}
-            onChange={handleEditFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="sex">
-          <Form.Label>Sexo</Form.Label>
-          <Form.Control
-            as="select"
-            name="sex"
-            value={editedSpecialist.sex}
-            onChange={handleEditFieldChange}
-          >
-            <option value="">Selecione uma opção</option>
-            <option value="masculino">Masculino</option>
-            <option value="feminino">Feminino</option>
-            <option value="outro">Outro</option>
-          </Form.Control>
-        </Form.Group>
-
-        <Form.Group controlId="phone">
-          <Form.Label>Telefone</Form.Label>
-          <Form.Control
-            type="text"
-            name="phone"
-            value={editedSpecialist.phone}
-            onChange={handleEditFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="email">
-          <Form.Label>E-mail</Form.Label>
-          <Form.Control
-            type="email"
-            name="email"
-            value={editedSpecialist.email}
-            onChange={handleEditFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="startTime">
-          <Form.Label>Entrada</Form.Label>
-          <Form.Control
-            type="time"
-            name="startTime"
-            value={editedSpecialist.startTime}
-            onChange={handleEditFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="endTime">
-          <Form.Label>Saída</Form.Label>
-          <Form.Control
-            type="time"
-            name="endTime"
-            value={editedSpecialist.endTime}
-            onChange={handleEditFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="specialtyId">
-          <Form.Label>Especialidade</Form.Label>
-          <Form.Control
-            as="select"
-            name="specialtyId"
-            value={editedSpecialist.specialtyId}
-            onChange={handleEditFieldChange}
-          >
-            <option value="">Selecione uma especialidade</option>
-            {specialties.map((specialtyId) => (
-              <option key={specialtyId._id} value={specialtyId._id}>
-                {specialtyId.name}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-
-        <Form.Group controlId="residente">
-          <Form.Label>É Residente?</Form.Label>
-          <Form.Select
-            name="residente"
-            value={editedSpecialist.residente}
-            onChange={handleEditFieldChange}
-          >
-            <option value="">Selecione uma opção</option>
-            <option value={true}>SIM</option>
-            <option value={false}>NÃO</option>
-          </Form.Select>
-        </Form.Group>
-      </Form>
-    );
-  };
-
-  // Renderização dos campos de edição dentro do Modal.Body
-  const renderAddFields = () => {
-    return (
-      <Form>
-        {/* Adicione os campos obrigatórios aqui */}
-        <Form.Group controlId="name">
-          <Form.Label>Nome</Form.Label>
-          <Form.Control
-            type="text"
-            name="name"
-            value={newSpecialist.name}
-            onChange={handleAddFieldChange}
-          />
-        </Form.Group>
-        <Form.Group controlId="cpf">
-          <Form.Label>CPF</Form.Label>
-          <Form.Control
-            type="text"
-            name="cpf"
-            value={newSpecialist.cpf}
-            onChange={handleAddFieldChange}
-          />
-        </Form.Group>
-        <Form.Group controlId="dateOfBirth">
-          <Form.Label>Data de Nascimento</Form.Label>
-          <Form.Control
-            type="date"
-            name="dateOfBirth"
-            value={newSpecialist.dateOfBirth}
-            onChange={handleAddFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="sex">
-          <Form.Label>Sexo</Form.Label>
-          <Form.Control
-            as="select"
-            name="sex"
-            value={newSpecialist.sex}
-            onChange={handleAddFieldChange}
-          >
-            <option value="">Selecione uma opção</option>
-            <option value="masculino">Masculino</option>
-            <option value="feminino">Feminino</option>
-            <option value="outro">Outro</option>
-          </Form.Control>
-        </Form.Group>
-        <Form.Group controlId="phone">
-          <Form.Label>Telefone</Form.Label>
-          <Form.Control
-            type="text"
-            name="phone"
-            value={newSpecialist.phone}
-            onChange={handleAddFieldChange}
-          />
-        </Form.Group>
-        <Form.Group controlId="email">
-          <Form.Label>E-mail</Form.Label>
-          <Form.Control
-            type="email"
-            name="email"
-            value={newSpecialist.email}
-            onChange={handleAddFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="startTime">
-          <Form.Label>Entrada</Form.Label>
-          <Form.Control
-            type="time"
-            name="startTime"
-            value={newSpecialist.startTime}
-            onChange={handleAddFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="endTime">
-          <Form.Label>Saída</Form.Label>
-          <Form.Control
-            type="time"
-            name="endTime"
-            value={newSpecialist.endTime}
-            onChange={handleAddFieldChange}
-          />
-        </Form.Group>
-
-        <Form.Group controlId="specialtyId">
-          <Form.Label>Especialidade</Form.Label>
-          <Form.Control
-            as="select"
-            name="specialtyId"
-            value={newSpecialist.specialtyId}
-            onChange={handleAddFieldChange}
-          >
-            <option value="">Selecione uma especialidade</option>
-            {specialties.map((specialtyId) => (
-              <option key={specialtyId._id} value={specialtyId._id}>
-                {specialtyId.name}
-              </option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-
-        <Form.Group controlId="residente">
-          <Form.Label>É Residente?</Form.Label>
-          <Form.Select
-            name="residente"
-            value={newSpecialist.residente}
-            onChange={handleAddFieldChange}
-          >
-            <option value="">Selecione uma opção</option>
-            <option value={true}>SIM</option>
-            <option value={false}>NÃO</option>
-          </Form.Select>
-        </Form.Group>
-      </Form>
-    );
-  };
+  const delayedSearch = debounce((query) => {
+    fetchEmployees(query);
+  }, 300);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    checkAdminPermission(token);
-  }, []);
-
-  const checkAdminPermission = async (token) => {
-    try {
-      const response = await api.get(`/verify/admin?token=${token}`);
-      if (response.status === 200) {
-        setIsAdmin(true); // Permissão concedida
-      } else {
-        setIsAdmin(false); // Outro código de resposta
-      }
-    } catch (error) {
-      console.error(error);
-      setIsAdmin(false);
+    if (query) {
+      fetchEmployees(query);
+    } else {
+      fetchEmployees("");
     }
+  }, [query]);
+
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+    setNoResultsMessage("");
+    delayedSearch(value);
   };
 
-  const handleOpenEditModal = (specialist) => {
-    setSelectedSpecialist(specialist);
-    setShowEditModal(true);
-  };
-
-  const handleCloseEditModal = () => {
-    setSelectedSpecialist(null);
-    setShowEditModal(false);
-  };
-
-  const fetchSpecialists = async () => {
-    try {
-      let response;
-      const token = localStorage.getItem("token");
-      if (searchBy === "all") {
-        response = await api.get(`/doctors/search?token=${token}`);
-      } else {
-        response = await api.get(`/doctors/search/${query}?token=${token}`);
-      }
-      setSpecialists(response.data);
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao buscar especialistas");
-    }
-  };
-
-  const handleDeleteSpecialist = (specialistKey) => {
-    // Defina o especialista a ser excluído no estado
-    setSelectedSpecialist(specialistKey);
-
-    // Abra a caixa de diálogo de confirmação
-    handleOpenDeleteConfirmation();
-  };
-
-  const handleConfirmDelete = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await api.delete(
-        `/doctors/${selectedSpecialist}?token=${token}`
-      );
-      if (response.status === 204) {
-        // Atualize a lista de especialistas após a exclusão
-        fetchSpecialists();
-      } else {
-        console.error("Falha ao excluir especialista:", response);
-      }
-    } catch (error) {
-      console.error("Erro ao excluir especialista:", error);
-    } finally {
-      // Feche a caixa de diálogo de confirmação
-      handleCloseDeleteConfirmation();
-    }
-  };
-
-  const handleChangeQuery = (e) => {
-    setQuery(e.target.value);
-  };
-
-  const handleChangeSearchBy = (e) => {
-    setSearchBy(e.target.value);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    fetchSpecialists();
-  };
-
-  if (!isAdmin) {
-    return <p>Acesso não autorizado</p>;
-  }
+  // HTML DE VISUAL
 
   return (
-    <Container className="body-especialista-pesquisa" style={{ padding: '12px', margin: 0, width: '1200px', height: '557px' }}>
-      <Row>
-        <Col style={{ paddingRight: 70 }}>
-          <h1>Gerenciar Especialistas</h1>
-          <Button variant="primary" onClick={handleOpenAddModal}>
-            Adicionar Especialista
-          </Button>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group controlId="query">
-              <Form.Label>Valor da busca</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Digite o valor da busca"
-                value={query}
-                onChange={handleChangeQuery}
-              />
-            </Form.Group>
-            <Form.Group controlId="searchBy">
-              <Form.Label>Tipo de busca</Form.Label>
-              <Form.Control
-                as="select"
-                value={searchBy}
-                onChange={handleChangeSearchBy}
-              >
-                <option value="all">Todos os especialistas</option>
-                <option value="id">ID</option>
-                <option value="name">Nome</option>
-                <option value="cpf">CPF</option>
-                {/* Add more search criteria if needed */}
-              </Form.Control>
-            </Form.Group>
-            <Button variant="primary" type="submit">
-              Pesquisar
-            </Button>
-          </Form>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <h2>Resultados da busca</h2>
-          {specialists.length > 0 ? (
-            <Table striped bordered hover>
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>CPF</th>
-                  <th>Data de nascimento</th>
-                  <th>Sexo</th>
-                  <th>Telefone</th>
-                  <th>E-mail</th>
-                  <th>Entrada</th>
-                  <th>Saída</th>
-                  <th>Especialidade</th>
-                  <th>É Residente?</th>
+    <div className="container-especialista">
+      <h1 className="header-especialista">
+        Página de Pesquisa de Especialistas
+      </h1>
+      <button className="button-especialista" onClick={handleShowModal}>
+        Adicionar Funcionário
+      </button>
+
+      <div className="search-form">
+        <input
+          className="input-especialista"
+          type="text"
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+          placeholder="Pesquisar..."
+        />
+      </div>
+
+      <div className="results-especialista">
+        <h2>Resultados da Pesquisa</h2>
+        {isLoading ? (
+          <div className="loading-container">
+            <div className="loading"></div>
+          </div>
+        ) : employees.length === 0 ? (
+          <p>{noResultsMessage}</p>
+        ) : (
+          <table className="specialist-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Ocupação no Ambulatório</th>
+                <th>CPF</th>
+                <th>Email</th>
+                <th>Especialidade</th>
+                <th>Privilégios</th>
+                <th>Nome de Usuário</th>
+              </tr>
+            </thead>
+            <tbody>
+              {employees.map((employee) => (
+                <tr key={employee._id}>
+                  <td>{employee.Nome}</td>
+                  <td>{employee.OcupacaoAmbulatorio}</td>
+                  <td>{employee.CPF}</td>
+                  <td>{employee.Email}</td>
+                  <td>{employee.specialtyId}</td>
+                  <td>{employee.Privilegios}</td>
+                  <td>{employee.username}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {specialists.map((specialist) => (
-                  <tr key={specialist._key}>
-                    <td>{specialist.name}</td>
-                    <td>{specialist.cpf}</td>
-                    <td>{specialist.dateOfBirth}</td>
-                    <td>{specialist.sex}</td>
-                    <td>{specialist.phone}</td>
-                    <td>{specialist.email}</td>
-                    <td>{specialist.startTime}</td>
-                    <td>{specialist.endTime}</td>
-                    <td>{findSpecialtyNameById(specialist.specialtyId)}</td>
-                    <td>{specialist.residente ? "SIM" : "NÃO"}</td>
-                    <td>
-                      <button onClick={() => handleOpenEditModal(specialist)} style={{
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none', // Isso remove a borda quando o botão é focado
-                        padding: 0, // Isso remove o preenchimento interno do botão
-                        cursor: 'pointer',
-                      }}>
-                        <FontAwesomeIcon icon={faEdit} style={{ color: 'blue', cursor: 'pointer' }} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteSpecialist(specialist._key)} style={{
-                          background: 'transparent',
-                          border: 'none',
-                          outline: 'none', // Isso remove a borda quando o botão é focado
-                          padding: 0, // Isso remove o preenchimento interno do botão
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} style={{ color: 'red', cursor: 'pointer' }} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                <Modal show={showEditModal} onHide={handleCloseEditModal}>
-                  <Modal.Header closeButton>
-                    <Modal.Title>Editar Especialista</Modal.Title>
-                  </Modal.Header>
-                  <Modal.Body>{renderEditFields()}</Modal.Body>
-                  <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseEditModal}>
-                      Cancelar
-                    </Button>
-                    <Button variant="primary" onClick={handleSaveEdit}>
-                      Salvar
-                    </Button>
-                  </Modal.Footer>
-                </Modal>
-              </tbody>
-            </Table>
-          ) : (
-            <p>Nenhum especialista encontrado.</p>
-          )}
-        </Col>
-      </Row>
-      <Modal show={showAddModal} onHide={handleCloseAddModal}>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
-          <Modal.Title>Adicionar Especialista</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>{renderAddFields()}</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseAddModal}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={handleAddSpecialist}>
-            Adicionar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-      <Modal show={showDeleteConfirmation} onHide={handleCloseDeleteConfirmation}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirmação de Exclusão</Modal.Title>
+          <Modal.Title>Adicionar Funcionário</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Tem certeza de que deseja excluir este especialista?
+          <form onSubmit={handleFormSubmit}>
+            <div className="form-group">
+              <label htmlFor="Nome">Nome</label>
+              <input
+                type="text"
+                name="Nome"
+                id="Nome"
+                className="form-control"
+                value={formData.Nome}
+                onChange={handleFormChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="CPF">CPF</label>
+              <input
+                type="text"
+                name="CPF"
+                id="CPF"
+                className={`form-control ${CPFIsValid ? '' : 'is-invalid'}`}
+                value={formData.CPF}
+                onChange={handleFormChange}
+                required
+              />
+              {!CPFIsValid && (
+                <div className="invalid-feedback">
+                  O CPF inserido não é válido.
+                </div>
+              )}
+            </div>
+            <div className="form-group">
+              <label htmlFor="Endereco">Endereço</label>
+              <input
+                type="text"
+                name="Endereco"
+                id="Endereco"
+                className="form-control"
+                value={formData.Endereco}
+                onChange={handleFormChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="OcupacaoAmbulatorio">Função no Ambulatório</label>
+              <input
+                type="text"
+                name="OcupacaoAmbulatorio"
+                id="OcupacaoAmbulatorio"
+                className="form-control"
+                value={formData.OcupacaoAmbulatorio}
+                onChange={handleFormChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="Email">Email</label>
+              <input
+                type="email"
+                name="Email"
+                id="Email"
+                className="form-control"
+                value={formData.Email}
+                onChange={handleFormChange}
+                required
+              />
+            </div>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleCloseModal}>
+                Fechar
+              </Button>
+              <Button variant="primary" type="submit">
+                Adicionar Funcionário
+              </Button>
+            </Modal.Footer>
+          </form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseDeleteConfirmation}>
-            Cancelar
-          </Button>
-          <Button variant="danger" onClick={handleConfirmDelete}>
-            Excluir
-          </Button>
-        </Modal.Footer>
       </Modal>
-
-    </Container>
+    </div>
   );
 };
 

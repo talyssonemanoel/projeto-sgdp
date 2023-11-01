@@ -26,7 +26,7 @@ function isTokenRevoked(token) {
   return invalidTokens.has(token);
 }
 
-async function verifyTokenAndUser(req, res, next) {
+async function verifySimplesAuth(req, res, next) {
   const token = req.query.token;
 
   if (!token) {
@@ -44,20 +44,24 @@ async function verifyTokenAndUser(req, res, next) {
 
     const user = await getUserById(userId);
 
-    req.user = {
-      id: userId,
-      // Outras informações do usuário, se necessário
-    };
-
-    next();
+    if (user && (user.Privilegios === 'Simples' || user.Privilegios === 'Intermediario' || user.Privilegios === 'Avancado')) {
+      req.user = {
+        id: userId,
+        // Outras informações do usuário, se necessário
+      };
+      next();
+    } else {
+      return res.status(403).json({ error: 'Acesso não autorizado para este nível de privilégios!' });
+    }
   } catch (err) {
     return res.status(401).json({ error: 'Token inválido ou expirado!' });
   }
 }
 
+
 async function getUserById(userId) {
   try {
-    const usuarios = db.collection('usuarios');
+    const usuarios = db.collection('Employees');
     const user = await usuarios.document(userId);
     return user; // Retorna o documento completo do usuário
   } catch (error) {
@@ -65,7 +69,7 @@ async function getUserById(userId) {
   }
 }
 
-async function verifyAdminPermission(req, res, next) {
+async function verifyAvancadoAuth(req, res, next) {
   const token = req.query.token;
 
   if (!token) {
@@ -83,8 +87,8 @@ async function verifyAdminPermission(req, res, next) {
 
     const user = await getUserById(userId);
 
-    if (user.admin === true) {
-      // Se o usuário for administrador, continue para a próxima função de middleware
+    if (user && user.Privilegios === 'Avancado') {
+      // Se o usuário tiver o atributo 'Privilegios' igual a 'Avancado', continue para a próxima função de middleware
       next();
     } else {
       return res.status(403).json({ error: 'Acesso não autorizado!' });
@@ -94,17 +98,17 @@ async function verifyAdminPermission(req, res, next) {
   }
 }
 
-router.get('/', verifyTokenAndUser, (req, res) => {
+router.get('/', verifySimplesAuth, (req, res) => {
   // Retornar alguma informação sobre o usuário ou sobre o token
   res.json({ user: req.user, token: req.query.token });
 });
 
 
 module.exports = {
-  verifyTokenAndUser,
+  verifySimplesAuth,
   getUserById,
   revokeToken,
   isTokenRevoked,
-  verifyAdminPermission,
+  verifyAvancadoAuth,
   router
 };

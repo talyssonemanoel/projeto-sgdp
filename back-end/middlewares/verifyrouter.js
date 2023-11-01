@@ -14,9 +14,9 @@ const db = new Database({
 
 const app = express();
 const router = express.Router();
-const { verifyTokenAndUser, verifyAdminPermission, getUserById} = require('./authMiddleware');
+const { verifySimplesAuth, verifyAvancadoAuth, getUserById} = require('./authMiddleware');
 
-router.post('/reset-password', verifyTokenAndUser, async (req, res) => {
+router.post('/reset-password', verifySimplesAuth, async (req, res) => {
   try {
     // Gerar uma nova senha aleatória
     const newPassword = generateRandomPassword();
@@ -47,18 +47,18 @@ router.post('/reset-password', verifyTokenAndUser, async (req, res) => {
 
 
 
-router.get('/', verifyTokenAndUser, (req, res) => {
+router.get('/', verifySimplesAuth, (req, res) => {
   // Retornar alguma informação sobre o usuário ou sobre o token
   res.json({ user: req.user, token: req.query.token });
 });
 
-router.get('/admin', verifyAdminPermission, (req, res) => {
+router.get('/admin', verifyAvancadoAuth, (req, res) => {
   // Retornar alguma informação sobre o usuário ou sobre o token
   res.json({ user: req.user, token: req.query.token });
 });
 
 
-router.get('/get-nome', verifyTokenAndUser, async (req, res) => {
+router.get('/get-nome', verifySimplesAuth, async (req, res) => {
   try {
     const user = await getUserById(req.user.id);
     res.json({ nome: user.nome }); // Retorna o campo 'nome' do documento do usuário
@@ -68,7 +68,7 @@ router.get('/get-nome', verifyTokenAndUser, async (req, res) => {
 });
 
 // Rota para obter os detalhes do usuário dono do token
-router.get('/user-details', verifyTokenAndUser, async (req, res) => {
+router.get('/user-details', verifySimplesAuth, async (req, res) => {
   try {
       const token = req.query.token;
       const decoded = jwt.verify(token, secret);
@@ -102,7 +102,7 @@ router.get('/user-details', verifyTokenAndUser, async (req, res) => {
 });
 
 // Rota para atualizar os detalhes do usuário e da pessoa dono do token
-router.put('/user-details', verifyTokenAndUser, async (req, res) => {
+router.put('/user-details', verifySimplesAuth, async (req, res) => {
   try {
       const token = req.query.token;
       const decoded = jwt.verify(token, secret);

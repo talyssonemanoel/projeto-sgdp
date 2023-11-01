@@ -30,7 +30,7 @@ async function loginUsuario(req, res) {
   try {
     await db.login(dbUser, dbPass); // Fazer o login no banco de dados ArangoDB
 
-    const usuarios = db.collection('usuarios');
+    const usuarios = db.collection('Employees');
     const user = await usuarios.firstExample({ username });
 
     if (!user) {

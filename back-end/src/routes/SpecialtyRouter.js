@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const router = express.Router();
 const { Database, aql } = require('arangojs');
-const { verifyTokenAndUser } = require('../../middlewares/authMiddleware');
+const { verifySimplesAuth } = require('../../middlewares/authMiddleware');
 const { getSpecialtyIdByName, getSpecialtyNameById} = require('./OtherFunctions');
 const jwt = require('jsonwebtoken');
 
@@ -20,7 +20,7 @@ const db = new Database({
 const specialtiesCollection = db.collection('Specialties');
 
 // Rota para adicionar uma especialidade
-router.post('/addSpecialty', verifyTokenAndUser, async (req, res) => {
+router.post('/addSpecialty', verifySimplesAuth, async (req, res) => {
     try {
         const { name, description } = req.body;
 
@@ -52,7 +52,7 @@ router.post('/addSpecialty', verifyTokenAndUser, async (req, res) => {
 
 
 // Rota para buscar o ID da especialidade pelo nome
-router.get('/SpecialtyIdByName/:name', verifyTokenAndUser, async (req, res) => {
+router.get('/SpecialtyIdByName/:name', verifySimplesAuth, async (req, res) => {
     const { name } = req.params;
     try {
         const specialtyId = await getSpecialtyIdByName(name);
@@ -67,7 +67,7 @@ router.get('/SpecialtyIdByName/:name', verifyTokenAndUser, async (req, res) => {
 });
 /* 
 // Rota para buscar o nome da especialidade pelo ID
-router.get('/SpecialtyNameById/:id', verifyTokenAndUser, async (req, res) => {
+router.get('/SpecialtyNameById/:id', verifySimplesAuth, async (req, res) => {
     const { id } = req.params;
     try {
         const specialtyName = await getSpecialtyNameById(id);
@@ -81,7 +81,7 @@ router.get('/SpecialtyNameById/:id', verifyTokenAndUser, async (req, res) => {
     }
 }); */
 
-router.get('/all', /*verifyTokenAndUser,*/ async (req, res) => {
+router.get('/all', verifyTokenAndUser, async (req, res) => {
     try {
         const query = aql`
         FOR Specialties IN Specialties
@@ -98,7 +98,7 @@ router.get('/all', /*verifyTokenAndUser,*/ async (req, res) => {
     }
 });
 
-router.get('/specialists/:specialtyId', verifyTokenAndUser, async (req, res) => {
+router.get('/specialists/:specialtyId', verifySimplesAuth, async (req, res) => {
     let { specialtyId } = req.params;
 
     // Adicione o prefixo 'Specialties/' ao parâmetro specialtyId

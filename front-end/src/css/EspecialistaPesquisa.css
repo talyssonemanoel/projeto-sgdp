@@ -1,93 +1,104 @@
-/* Definir as cores principais */
-:root {
-    --primary-color: #007bff;
-    --secondary-color: #f0f0f0;
-    --error-color: #dc3545;
-  }
+/* EspecialistaPesquisa.css */
 
-  .body-especialista-pesquisa {
-    background-color: white!important;
-  }
-  
-  /* Estilizar o container principal */
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 90%;
-    max-width: 1200px;
-    margin: 20px auto;
-  }
-  
-  /* Estilizar o botão de adicionar especialista */
-  .button {
-    width: 200px;
-    margin-bottom: 20px;
-  }
-  
-  /* Estilizar a linha do formulário de pesquisa */
-  .row {
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  /* Estilizar a coluna do formulário de pesquisa */
-  .col {
-    display: flex;
-    flex-direction: column;
-    width: 45%;
-  }
-  
-  /* Estilizar o título da pesquisa */
-  h1 {
-    font-size: 24px;
-    font-weight: bold;
-  }
-  
-  /* Estilizar o formulário de pesquisa */
-  .form {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Estilizar os grupos do formulário de pesquisa */
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 10px;
-  }
-  
-  /* Estilizar os labels do formulário de pesquisa */
-  .form-label {
-    font-size: 16px;
-  }
-  
-  /* Estilizar os inputs do formulário de pesquisa */
-  .form-control {
-    height: 40px;
-    padding-left: 10px;
-  }
-  
-  /* Estilizar o botão de pesquisa */
-  .form button {
-    width: 100%;
-    height: 40px;
-  }
-  
-  /* Estilizar a tabela de resultados da pesquisa */
-  .table {
-    width: 100%;
-  }
-  
-  /* Estilizar as células da tabela de resultados da pesquisa */
-  .table td, .table th {
-     padding :10 px; 
-     text-align :center; 
-  }
-  
-  /* Estilizar o modal de edição de especialista */
-  .modal {
-     width :80%; 
-     margin :auto; 
-  }
-  
+.container-especialista {
+  width: 90vw; /* Largura de 90% da viewport */
+  margin: auto; /* 70px de margem superior para a barra de navegação e margens laterais automáticas */
+  padding: 20px;
+  background-color: #fff;
+  height: 90vh;
+  overflow-y: auto; /* Adiciona rolagem vertical se necessário */
+}
+
+.header-especialista {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.filters-especialista {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.select-especialista {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.search-form {
+  display: flex; /* Usar flexbox para organizar os elementos em linha */
+  align-items: center; /* Alinhar elementos verticalmente ao centro */
+}
+
+/* Estilos para o campo de pesquisa */
+.input-especialista {
+  flex: 1;
+  width: 200px; /* Defina a largura desejada para o campo de pesquisa */
+  padding: 5px;
+  font-size: 14px;
+}
+
+.button-especialista {
+  padding: 10px;
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.results-especialista {
+  margin-top: 20px;
+}
+
+.results-especialista ul {
+  list-style: none;
+  padding: 0;
+}
+
+.results-especialista li {
+  font-size: 16px;
+  margin: 5px 0;
+}
+
+/* Estilo da animação de carregamento */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.loading {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.specialist-table th,
+.specialist-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.specialist-table th {
+  background-color: #f2f2f2;
+}
+
+.specialist-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.specialist-table tr:hover {
+  background-color: #ddd;
+}
