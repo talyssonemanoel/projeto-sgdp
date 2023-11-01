@@ -12,33 +12,7 @@ const ModalAgendamento = () => {
   const [especialistaInputValue, setEspecialistaInputValue] = useState('');
   const [pacienteInputValue, setPacienteInputValue] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [options, setOptions] = useState([]);
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-
-  const timeOptions = [];
   const Noop = () => null;
-
-
-  for(let i=0; i<24; i++) {
-    for(let j=0; j<60; j+=30) {
-      let startHour = i.toString().padStart(2, '0');
-      let startMinute = j.toString().padStart(2, '0');
-      let endHour = (j === 30 ? (i+1) : i).toString().padStart(2, '0');
-      let endMinute = (j === 30 ? '00' : '30');
-      timeOptions.push({ value: `${startHour}:${startMinute}-${endHour}:${endMinute}`, label: `${startHour}:${startMinute} - ${endHour}:${endMinute}` });
-    }
-  }
-
-  const loadOptions = () => {
-    api.get('/especialidade/all')
-      .then(response => {
-        const newOptions = response.data.map(service => ({ value: service._id, label: service.name }));
-        setOptions(newOptions);
-      });
-  };
-  
-  
 
   const handleButtonClick = (button) => {
     if (activeButton === button) {
@@ -76,15 +50,6 @@ const ModalAgendamento = () => {
     }
   };
 
-  const handleServiceChange = (selectedOption) => {
-    setSelectedService(selectedOption);
-    console.log('Serviço selecionado:', selectedOption);
-  };
-  
-  const handleTimeChange = (selectedOption) => {
-    setSelectedTime(selectedOption);
-  };
-
   const handleEspecialistaInputChange = (newValue) => {
     setEspecialistaInputValue(newValue);
   };
@@ -120,16 +85,11 @@ const ModalAgendamento = () => {
     if (selectedEspecialista && selectedPaciente && selectedDate && activeButton) {
       const data = {
         ambulatorio: activeButton === 'left' ? 'Geral' : 'LGBT',
-        typeId: selectedService ? selectedService.value : '',
-        type: selectedService ? selectedService.label : '',
         doctorKey: selectedEspecialista.value.split('/')[1], // Remove o 'Person/' do doctorKey
         patientKey: selectedPaciente.value.split('/')[1], // Remove o 'Person/' do patientKey
-        date: selectedDate,
-        startDateTime: selectedTime ? selectedTime.value.split('-')[0] : '',
-        endDateTime: selectedTime ? selectedTime.value.split('-')[1] : '',
+        date: selectedDate
       };
       try {
-        console.log(data)
         const response = await api.post('/agendar/add', data);
         console.log('Dados enviados com sucesso:', response.data);
         var myModalEl = document.getElementById('exampleModal')
@@ -190,64 +150,9 @@ const ModalAgendamento = () => {
               </button>
             </div>
             <form>
-            <AsyncSelect
-  defaultOptions={options}
-  onMenuOpen={loadOptions}
-  isSearchable={false}
-  onChange={handleServiceChange}
-/>
-
-              <div className='PEspaçamento'>
-              <label htmlFor="dateInput" className="form-label">Especialista</label>
-              <div className={`input-container ${selectedEspecialista ? 'flex-container' : ''}`}>
-                <div>
-                  <AsyncSelect
-                    placeholder="Especialista"
-                    cacheOptions
-                    loadOptions={loadEspecialistaOptions}
-                    onInputChange={handleEspecialistaInputChange}
-                    onChange={handleEspecialistaChange}
-                    value={selectedEspecialista}
-                    isDisabled={selectedEspecialista !== null}
-                    components={{ DropdownIndicator: Noop, indicatorSeparator: Noop }}
-                  />
-                </div>
-                <div>
-                  {selectedEspecialista && (
-                    <button onClick={handleEspecialistaClear} className="clear-button">
-                      <i className="bi bi-x-lg"></i>
-                    </button>
-                  )}
-                </div>
-              </div>
-              </div>
               <div className="mb-3">
                 <label htmlFor="dateInput" className="form-label">Data</label>
                 <input type="date" className="form-control" id="dateInput" value={selectedDate} onChange={handleDateChange} />
-              </div>
-              <label htmlFor="dateInput" className="form-label">Paciente</label>
-              <div className={`input-container ${selectedPaciente ? 'flex-container' : ''}`}>
-                <div>
-                  <AsyncSelect
-                    placeholder="Paciente"
-                    cacheOptions
-                    loadOptions={loadPacienteOptions}
-                    onInputChange={handlePacienteInputChange}
-                    onChange={handlePacienteChange}
-                    value={selectedPaciente}
-                    isDisabled={selectedPaciente !== null}
-                    components={{ DropdownIndicator: Noop, indicatorSeparator: Noop }}
-                  />
-                </div>
-                <div>
-                {selectedPaciente && (
-                <button onClick={handlePacienteClear} className="clear-button">
-                  <i className="bi bi-x-lg"></i>
-                </button>
-                  )}
-                </div>
-                <Select options={timeOptions} onChange={handleTimeChange}/>
-
               </div>
             </form>
           </div>

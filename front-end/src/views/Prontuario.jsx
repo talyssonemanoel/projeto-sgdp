@@ -11,6 +11,7 @@ const Prontuario = () => {
   const [atendimentos, setAtendimentos] = useState([]);
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [activeButton, setActiveButton] = useState(null);
 
   const loadPacienteOptions = async (inputValue) => {
     try {
@@ -28,14 +29,11 @@ const Prontuario = () => {
   };
 
   // Crie uma função para carregar os atendimentos
-  const loadAtendimentos = async (pacienteId) => {
+  const loadAtendimentos = async (pacienteId, ambulatorio) => {
     try {
-      const response = await api.get('/agendar/GetServicesByPatientKey', { params: { q: pacienteId } });
+      const response = await api.get('/agendar/GetServicesByPatientKey', { params: { q: pacienteId, ambulatorio: ambulatorio } });
       setAtendimentos(response.data);
-      console.log("response data e")
-      console.log(response.data)
     } catch (error) {
-      console.log("deu erro")
       console.error('Erro ao buscar dados de atendimentos:', error);
     }
   };
@@ -46,9 +44,9 @@ const Prontuario = () => {
 
   const handlePacienteChange = (selectedOption) => {
     setSelectedPaciente(selectedOption);
-    console.log(selectedOption)
-    console.log(selectedOption.value)
-    loadAtendimentos(selectedOption.value);
+    loadAtendimentos(selectedOption.value, activeButton);
+    console.log("proximo output é o paciente e o botao")
+    console.log(selectedOption.value, activeButton)
   };
 
   const handlePacienteClear = () => {
@@ -56,11 +54,11 @@ const Prontuario = () => {
     setPacienteInputValue('');
   };
 
-  // Obtenha uma lista de todas as specialtyNames únicas
-  const specialtyNames = [...new Set(atendimentos.map(atendimento => atendimento.specialtyName))];
+  // Obtenha uma lista de todas as types únicas
+  const types = [...new Set(atendimentos.map(atendimento => atendimento.type))];
 
-  // Filtre os atendimentos pela specialtyName selecionada
-  const filteredAtendimentos = atendimentos.filter(atendimento => atendimento.specialtyName === selectedSpecialty);
+  // Filtre os atendimentos pela type selecionada
+  const filteredAtendimentos = atendimentos.filter(atendimento => atendimento.type === selectedSpecialty);
 
   return (
     <div>
@@ -77,16 +75,16 @@ const Prontuario = () => {
                     Folha de evolução
                   </div>
                   <div>
-                  {specialtyNames.map(specialtyName => (
+                  {types.map(type => (
                     <button 
-                    className={`w-100 btn-menu-l ${selectedSpecialty === specialtyName ? 'selected' : ''}`}  
-                    key={specialtyName} 
+                    className={`w-100 btn-menu-l ${selectedSpecialty === type ? 'selected' : ''}`}  
+                    key={type} 
                     onClick={() => {
-                      setSelectedSpecialty(specialtyName);
+                      setSelectedSpecialty(type);
                       setCurrentPage(0); // Adicione esta linha
                     }}
                   >
-                    {specialtyName}
+                    {type}
                   </button>
                     ))}
                   </div>
@@ -110,10 +108,13 @@ const Prontuario = () => {
         <BuscarPaciente
           selectedPaciente={selectedPaciente}
           pacienteInputValue={pacienteInputValue}
+          activeButton={activeButton}
+          setActiveButton={setActiveButton}
           loadPacienteOptions={loadPacienteOptions}
           handlePacienteInputChange={handlePacienteInputChange}
           handlePacienteChange={handlePacienteChange}
           handlePacienteClear={handlePacienteClear}
+          
         />
       )}
     </div>

@@ -24,10 +24,10 @@ const collectionName = 'Service';
 // Rota para agendar consultas
 router.post('/add', async (req, res) => {
     try {
-        const { ambulatorio, doctorKey, patientKey, date } = req.body;
+        const { ambulatorio, typeId, type, doctorKey, patientKey, date, startDateTime, endDateTime } = req.body;
 
         // Verifica se os campos obrigatórios foram fornecidos
-        if (!ambulatorio || !doctorKey || !patientKey || !date) {
+        if (!ambulatorio || !typeId || !type || !doctorKey || !patientKey || !date || !startDateTime || !endDateTime) {
             return res.status(400).json({ error: 'Todos os campos são obrigatórios para agendar uma consulta.' });
         }
 
@@ -42,8 +42,10 @@ router.post('/add', async (req, res) => {
         if (!patient) {
             return res.status(400).json({ error: 'Erro ao encontrar paciente' });
         }
+
         const patientId = patient._id
         const patientName = patient.name
+
         if (!patientId) {
             return res.status(400).json({ error: 'CPF de paciente inválido ou não encontrado.' });
         }
@@ -51,6 +53,7 @@ router.post('/add', async (req, res) => {
         // Estabele uma relaçãod e aresta entre paciente e doutor
         const _from = patientId;
         const _to = doctorId;
+        const status = agendado;
 
         // Busca o _id da especialidade pelo nome
         
@@ -59,10 +62,15 @@ router.post('/add', async (req, res) => {
             _from,
             _to,
             ambulatorio,
+            typeId,
+            type,
             doctorId,
             patientId,
             patientName,
             date,
+            startDateTime,
+            endDateTime,
+            status
         };
 
         // Insere os dados da consulta na coleção
@@ -217,23 +225,28 @@ router.get('/GetServicesByPatientKey', async (req, res) => {
     try {
         // Obter o valor do parâmetro patientKey da consulta
         const patientID = req.query.q;
+        const ambulatorio = req.query.ambulatorio;
 
         // Verifique se o parâmetro patientKey foi fornecido na consulta
         if (!patientID) {
             return res.status(400).json({ error: 'O parâmetro patientID é obrigatório.' });
         }
 
-        // Construa uma consulta AQL para buscar documentos na coleção Atendimentos onde _from corresponde ao patientKey
+        // Verifique se o valor do ambulatorio é 'geral' ou 'LGBT'
+        if (ambulatorio !== 'Geral' && ambulatorio !== 'LGBT') {
+            return res.status(400).json({ error: 'O valor do ambulatório é inválido. Deve ser "geral" ou "LGBT".' });
+        }
+
+        // Construa uma consulta AQL para buscar documentos na coleção Atendimentos onde _from corresponde ao patientKey e ambulatorio corresponde ao valor fornecido
         const query = aql`
             FOR atendimento IN Service
-            FILTER atendimento.patientId == ${patientID}
+            FILTER atendimento.patientId == ${patientID} && atendimento.ambulatorio == ${ambulatorio}
             RETURN atendimento
         `;
 
         // Execute a consulta no banco de dados
         const cursor = await db.query(query);
         const atendimentos = await cursor.all();
-        console.log(query.query);
 
         // Envie os documentos encontrados como resposta
         res.json(atendimentos);
@@ -242,8 +255,6 @@ router.get('/GetServicesByPatientKey', async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar atendimentos por patientKey' });
     }
 });
-
-
 
 
 module.exports = router;
