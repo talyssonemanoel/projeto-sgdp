@@ -14,7 +14,7 @@ const db = new Database({
 
 const app = express();
 const router = express.Router();
-const { verifySimplesAuth, verifyAvancadoAuth, getUserById} = require('./authMiddleware');
+const { verifySimplesAuth, verifyAvancadoAuth, verifyMedioAuth, getUserById} = require('./authMiddleware');
 
 router.post('/reset-password', verifySimplesAuth, async (req, res) => {
   try {
@@ -57,11 +57,15 @@ router.get('/admin', verifyAvancadoAuth, (req, res) => {
   res.json({ user: req.user, token: req.query.token });
 });
 
+router.get('/medio', verifyMedioAuth, (req, res) => {
+  // Retornar alguma informação sobre o usuário ou sobre o token
+  res.json({ user: req.user, token: req.query.token });
+});
 
 router.get('/get-nome', verifySimplesAuth, async (req, res) => {
   try {
     const user = await getUserById(req.user.id);
-    res.json({ nome: user.nome }); // Retorna o campo 'nome' do documento do usuário
+    res.json({ nome: user.Nome }); // Retorna o campo 'nome' do documento do usuário
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar o nome do usuário' });
   }

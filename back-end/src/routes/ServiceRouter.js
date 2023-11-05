@@ -84,12 +84,15 @@ router.get('/messages', verifySimplesAuth, async (req, res) => {
     const query = aql`
       FOR message IN Messages
       LIMIT 10
-      LET author = (FOR user IN usuarios
+      LET author = (FOR user IN Employees
                     FILTER user._key == message.autor
-                    RETURN user.nome)[0]
+                    RETURN user.Nome)[0]
+      LET authorParts = SPLIT(author, ' ')
+      LET firstName = authorParts[0]
+      LET lastName = authorParts[-1]
       RETURN {
         mensagem: message.mensagem,
-        autor: author,
+        autor: CONCAT(firstName, ' ', lastName),
         dataHora: message.dataHora
       }
     `;
@@ -103,6 +106,7 @@ router.get('/messages', verifySimplesAuth, async (req, res) => {
     res.status(500).json({ message: 'Erro ao buscar mensagens', error: error.message });
   }
 });
+
 
 
 

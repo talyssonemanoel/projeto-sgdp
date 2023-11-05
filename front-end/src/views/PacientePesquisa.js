@@ -186,7 +186,7 @@ const PatientSearch = () => {
 
 
   return (
-    <Container className="body-paciente-pesquisa" style={{ padding: '12px', margin: 0, width: '1200px', height: 'auto' }}>
+    <Container className="body-paciente-pesquisa">
       <Row>
         <Col>
           <h1>Pesquisar Pacientes</h1>

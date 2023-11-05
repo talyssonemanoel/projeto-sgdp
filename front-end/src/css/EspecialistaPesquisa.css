@@ -14,55 +14,52 @@
   margin-bottom: 20px;
 }
 
-.filters-especialista {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.select-especialista {
-  flex: 1;
-  margin-right: 10px;
-}
-
-.search-form {
-  display: flex; /* Usar flexbox para organizar os elementos em linha */
-  align-items: center; /* Alinhar elementos verticalmente ao centro */
-}
-
-/* Estilos para o campo de pesquisa */
-.input-especialista {
-  flex: 1;
-  width: 200px; /* Defina a largura desejada para o campo de pesquisa */
-  padding: 5px;
-  font-size: 14px;
-}
-
 .button-especialista {
-  padding: 10px;
+  padding: 10px 20px;
   background-color: #007BFF;
   color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.button-especialista:hover {
+  background-color: #0056b3;
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.input-especialista {
+  flex: 1;
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+}
+
+.input-especialista::placeholder {
+  color: #aaa;
+}
+
+.input-especialista:focus {
+  border-color: #007BFF;
 }
 
 .results-especialista {
   margin-top: 20px;
 }
 
-.results-especialista ul {
-  list-style: none;
-  padding: 0;
+.no-results {
+  color: #f00;
 }
 
-.results-especialista li {
-  font-size: 16px;
-  margin: 5px 0;
-}
-
-/* Estilo da animação de carregamento */
 .loading-container {
   display: flex;
   justify-content: center;
@@ -79,15 +76,15 @@
   animation: spin 2s linear infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.specialist-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .specialist-table th,
 .specialist-table td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 10px;
   text-align: left;
 }
 
