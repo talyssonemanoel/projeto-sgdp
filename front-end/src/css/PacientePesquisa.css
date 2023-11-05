@@ -1,4 +1,8 @@
-.body-paciente-pesquisa {
-    width: 1200px;
-    background-color: white;
+.body-paciente-pesquisa.container {
+  width: 90vw;
+  margin: auto; /* 70px de margem superior para a barra de navegação e margens laterais automáticas */
+  padding: 20px;
+  background-color: #fff;
+  height: 90vh;
+  overflow-y: auto; /* Adiciona rolagem vertical se necessário */
   }

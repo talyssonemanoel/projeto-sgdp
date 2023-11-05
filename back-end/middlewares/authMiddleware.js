@@ -58,6 +58,39 @@ async function verifySimplesAuth(req, res, next) {
   }
 }
 
+async function verifyMedioAuth(req, res, next) {
+  const token = req.query.token;
+
+  if (!token) {
+    return res.status(401).json({ error: 'Token não fornecido!' });
+  }
+
+  // Verifica se o token não foi revogado (está na lista de tokens inválidos)
+  if (isTokenRevoked(token)) {
+    return res.status(401).json({ error: 'Token inválido ou expirado!' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, secret);
+    const userId = decoded.sub;
+
+    const user = await getUserById(userId);
+
+    if (user && (user.Privilegios === 'Avancado' || user.Privilegios === 'Intermediario')) {
+      req.user = {
+        id: userId,
+        // Outras informações do usuário, se necessário
+      };
+      next();
+    } else {
+      return res.status(403).json({ error: 'Acesso não autorizado para este nível de privilégios!' });
+    }
+  } catch (err) {
+    return res.status(401).json({ error: 'Token inválido ou expirado!' });
+  }
+}
+
+
 
 async function getUserById(userId) {
   try {
@@ -110,5 +143,6 @@ module.exports = {
   revokeToken,
   isTokenRevoked,
   verifyAvancadoAuth,
+  verifyMedioAuth,
   router
 };
