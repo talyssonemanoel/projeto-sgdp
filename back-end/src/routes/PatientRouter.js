@@ -24,31 +24,58 @@ const collectionName = 'Person';
 router.post('/add', verifySimplesAuth, async (req, res) => {
     try {
         const {
-            Nome, // Modifique 'name' para 'Nome'
-            DataDeNascimento, // Modifique 'dateOfBirth' para 'Data de Nascimento'
-            Ocupacao, // Adicione 'Ocupação'
-            IdentidadeDeGenero, // Adicione 'Identidade de Gênero'
-            OrientacaoSexual, // Adicione 'Orientação Sexual'
-            CarteiraNacionalDeSaude, // Adicione 'Carteira Nacional de Saúde'
-            UBScadastrada, // Adicione 'UBS cadastrada'
-            Endereco, // Modifique 'address' para 'Endereço'
-            Bairro, // Adicione 'Bairro'
-            Telefone // Adicione 'Telefone'
+            Nome,
+            dataDeNascimento,
+            cartaoSus,
+            rg,
+            cpf,
+            etnia,
+            escolaridade,
+            estadoCivil,
+            ocupacao,
+            nomeDaMae,
+            logradouro,
+            numeroEndereco,
+            complementoEndereco,
+            cidade,
+            estado,
+            email,
+            telefone,
+            whatsapp,
+            contatoEmergencia,
+            orientacaoSexual,
+            identidadeDeGenero,
+            ubsCadastrada,
+            acompanhamentoDeSaude,
+            observacoes
         } = req.body;
 
 
         const patientData = {
             Nome,
-            DataDeNascimento,
-            Ocupacao,
-            IdentidadeDeGenero,
-            OrientacaoSexual,
-            CarteiraNacionalDeSaude,
-            UBScadastrada,
-            Endereco,
-            Bairro,
-            Telefone,
-            // Se quiser manter os outros atributos do paciente, você pode adicioná-los aqui.
+            dataDeNascimento,
+            cartaoSus,
+            rg,
+            cpf,
+            etnia,
+            escolaridade,
+            estadoCivil,
+            ocupacao,
+            nomeDaMae,
+            logradouro,
+            numeroEndereco,
+            complementoEndereco,
+            cidade,
+            estado,
+            email,
+            telefone,
+            whatsapp,
+            contatoEmergencia,
+            orientacaoSexual,
+            identidadeDeGenero,
+            ubsCadastrada,
+            acompanhamentoDeSaude,
+            observacoes
         };
 
         // Insere os dados do paciente na coleção

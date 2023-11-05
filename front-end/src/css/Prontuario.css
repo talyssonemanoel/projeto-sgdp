@@ -10,6 +10,7 @@
     width: 1200px;
     flex: 1;
     height: auto;
+    min-height: 589px;
 }
 
 .cabecalho-prontuario {
@@ -23,28 +24,28 @@
     width: auto
 }
 
+.dados-gerais-do-paciente {
+    background-color: white;
+    padding: 12px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.176);
+    border-width: 1px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.divisor-subtitle {
+    border-top-style: solid;
+    border-top-color: rgba(0, 0, 0, 0.176) ;
+    border-top-width: 1px;
+    padding-top: 8px;
+}
+
 .card-text {
     min-width: 800px;
 }
 
-
-.date-card {
-    padding: 0px;
-    margin: 0px;
-    max-height: 75px;
-    max-width: 48px; 
-}
-
-.lines {
-    padding: 0;
-}
-
-.lines1 {
-    margin-left: 3px;
-}
-
 .menu-left {
-    padding-top: 10px;
     text-align: center;
     width: 200px;
     height: 100%;
@@ -55,9 +56,21 @@
     flex: 0 0 auto; /* Faz com que a div menuu tenha uma largura fixa e não cresça verticalmente */
   }
 
+  .titulo-menu-left {
+    height: 30px;
+    font-weight: 500;
+    margin-left: 10px;
+    margin-right: 10px;
+    border-bottom-color: rgba(0, 0, 0, 0.176);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    color: #6c757d;
+  }
+
   .btn-menu-l {
     background-color: transparent;
     min-height: 10px;
+    height: 30px;
     border-width: 0px;
   }
 
@@ -116,4 +129,20 @@
 /* COMPONENTE BuscarPaciente.js*/
 .btn-amb {
     padding: 10px;
+}
+
+/*COMPONENTE ProntuarioLinhaDoTempo.js*/
+.date-card {
+    padding: 0px;
+    margin: 0px;
+    max-height: 75px;
+    max-width: 48px; 
+}
+
+.lines {
+    padding: 0;
+}
+
+.lines1 {
+    margin-left: 3px;
 }
