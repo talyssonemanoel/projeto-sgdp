@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { Modal, Button } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -11,7 +13,20 @@ const EspecialistaPesquisa = () => {
   const [employees, setEmployees] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedOccupation, setSelectedOccupation] = useState("Escolha uma função");
+  const [editEmployee, setEditEmployee] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingFields, setEditingFields] = useState({
+    nome: false,
+    CPF: false,
+    endereco: false,
+    ocupacaoAmbulatorio: false,
+    Email: false,
+    specialtyId: false,
+    username: false,
+  });
+
+  const [selectedOccupation, setSelectedOccupation] =
+    useState("Escolha uma função");
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [noResultsMessage, setNoResultsMessage] = useState(""); // Mensagem de nenhum resultado
@@ -101,6 +116,44 @@ const EspecialistaPesquisa = () => {
 
   // FIM DO VERIFICA CPF //
 
+  // DITA O MODAL E FUNÇÕES DE EDIÇÃO
+
+  const handleEditEmployee = (employee) => {
+    setEditEmployee(employee);
+    setShowEditModal(true);
+  };
+
+  const handleEditFieldSelection = (e) => {
+    const fieldName = e.target.name;
+    const isChecked = e.target.checked;
+    setEditingFields((prevEditingFields) => ({
+      ...prevEditingFields,
+      [fieldName]: isChecked,
+    }));
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      // Realize a requisição PUT ou POST para atualizar os detalhes do profissional no backend
+      // Utilize o estado 'editEmployee' para obter os dados do profissional que está sendo editado
+      const response = await api.put(
+        `/doctors/${editEmployee._key}?token=${token}`,
+        editEmployee
+      );
+      // Lide com a resposta da atualização, se necessário
+
+      // Feche o modal de edição após a atualização bem-sucedida
+      setShowEditModal(false);
+
+      // Atualize a lista de funcionários para refletir as alterações no frontend
+      fetchEmployees(searchQuery);
+    } catch (error) {
+      console.error("Erro ao salvar as alterações:", error);
+      // Trate os erros apropriadamente
+    }
+  };
+
   // BUSCA DE ESPECIALIDADES
 
   useEffect(() => {
@@ -148,10 +201,10 @@ const EspecialistaPesquisa = () => {
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-  
+
     if (name === "occupation") {
       setSelectedOccupation(value);
-      setShowSpecialtyDropdown(value === 'Especialista');
+      setShowSpecialtyDropdown(value === "Especialista");
     } else if (name === "CPF") {
       const formattedCPF = formatCPF(value);
       setFormData({
@@ -175,24 +228,27 @@ const EspecialistaPesquisa = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!CPFIsValid || selectedOccupation === "Escolha uma função") {
       // Impedir o envio do formulário se o CPF não for válido ou nenhuma ocupação for selecionada
       return;
     }
-  
+
     const dataToSubmit = {
       ...formData,
       ocupacaoAmbulatorio: selectedOccupation,
       nomeEspecialidade: selectedSpecialty, // Inclua 'nomeEspecialidade' com o valor da especialidade selecionada
     };
-  
+
     try {
       const token = localStorage.getItem("token");
-      const response = await api.post(`/doctors/add?token=${token}`, dataToSubmit);
+      const response = await api.post(
+        `/doctors/add?token=${token}`,
+        dataToSubmit
+      );
       // Lide com a resposta da adição do funcionário, se necessário
       handleCloseModal(); // Feche o modal após o envio bem-sucedido
-  
+
       // Após a adição bem-sucedida, atualize a lista de funcionários
       fetchEmployees(searchQuery);
     } catch (error) {
@@ -300,9 +356,10 @@ const EspecialistaPesquisa = () => {
             <thead>
               <tr>
                 <th>Nome</th>
-                <th>Ocupação no Ambulatório</th>
                 <th>CPF</th>
+                <th>Endereço</th>
                 <th>Email</th>
+                <th>Ocupação no Ambulatório</th>
                 <th>Especialidade</th>
                 <th>nome de Usuário</th>
               </tr>
@@ -311,17 +368,185 @@ const EspecialistaPesquisa = () => {
               {employees.map((employee) => (
                 <tr key={employee._id}>
                   <td>{employee.nome}</td>
-                  <td>{employee.ocupacaoAmbulatorio}</td>
                   <td>{employee.CPF}</td>
+                  <td>{employee.endereco}</td>
                   <td>{employee.Email}</td>
-                  <td>{employee.specialtyId}</td>
+                  <td>{employee.ocupacaoAmbulatorio}</td>
+                  <td>{employee.nomeEspecialidade}</td>
                   <td>{employee.username}</td>
+                  <td>
+                    <FontAwesomeIcon
+                      icon={faEdit}
+                      onClick={() => handleEditEmployee(employee)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+      {/*  COMEÇO DO MODAL DE EDIÇÃO  */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Editar Profissional</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="form-group">
+            <label>Escolha os campos a serem editados:</label>
+            <div className="edit-checkboxes">
+              <div className="edit-field">
+                <input
+                  type="checkbox"
+                  name="nome"
+                  checked={editingFields.nome}
+                  onChange={handleEditFieldSelection}
+                />
+                <label htmlFor="nome">Nome</label>
+                <input
+                  type="text"
+                  className={`form-control ${
+                    !editingFields.nome ? "disabled" : ""
+                  }`}
+                  value={
+                    editingFields.nome ? editEmployee.nome || formData.nome : ""
+                  }
+                  onChange={handleFormChange}
+                  disabled={!editingFields.nome}
+                />
+              </div>
+              <div className="edit-field">
+                <input
+                  type="checkbox"
+                  name="CPF"
+                  checked={editingFields.CPF}
+                  onChange={handleEditFieldSelection}
+                />
+                <label htmlFor="CPF">CPF</label>
+                <input
+                  type="text"
+                  className={`form-control ${
+                    !editingFields.CPF ? "disabled" : ""
+                  }`}
+                  value={
+                    editingFields.CPF ? editEmployee.CPF || formData.CPF : ""
+                  }
+                  onChange={handleFormChange}
+                  disabled={!editingFields.CPF}
+                />
+              </div>
+              <div className="edit-field">
+                <input
+                  type="checkbox"
+                  name="endereco"
+                  checked={editingFields.endereco}
+                  onChange={handleEditFieldSelection}
+                />
+                <label htmlFor="endereco">Endereço</label>
+                <input
+                  type="text"
+                  className={`form-control ${
+                    !editingFields.endereco ? "disabled" : ""
+                  }`}
+                  value={
+                    editingFields.endereco
+                      ? editEmployee.endereco || formData.endereco
+                      : ""
+                  }
+                  onChange={handleFormChange}
+                  disabled={!editingFields.endereco}
+                />
+              </div>
+              <div className="edit-field">
+                <input
+                  type="checkbox"
+                  name="ocupacaoAmbulatorio"
+                  checked={editingFields.ocupacaoAmbulatorio}
+                  onChange={handleEditFieldSelection}
+                />
+                <label htmlFor="ocupacaoAmbulatorio">
+                  Função no Ambulatório
+                </label>
+                <select
+                  className={`form-control ${
+                    !editingFields.ocupacaoAmbulatorio ? "disabled" : ""
+                  }`}
+                  value={
+                    editingFields.ocupacaoAmbulatorio
+                      ? editEmployee.ocupacaoAmbulatorio ||
+                        formData.ocupacaoAmbulatorio
+                      : ""
+                  }
+                  onChange={handleFormChange}
+                  disabled={!editingFields.ocupacaoAmbulatorio}
+                >
+                  <option value="Administrador">Administrador</option>
+                  <option value="Assistente">Assistente</option>
+                  <option value="Especialista">Especialista</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+              <div className="edit-field">
+                <input
+                  type="checkbox"
+                  name="Email"
+                  checked={editingFields.Email}
+                  onChange={handleEditFieldSelection}
+                />
+                <label htmlFor="Email">Email</label>
+                <input
+                  type="email"
+                  className={`form-control ${
+                    !editingFields.Email ? "disabled" : ""
+                  }`}
+                  value={
+                    editingFields.Email
+                      ? editEmployee.Email || formData.Email
+                      : ""
+                  }
+                  onChange={handleFormChange}
+                  disabled={!editingFields.Email}
+                />
+              </div>
+              <div className="edit-field">
+                <input
+                  type="checkbox"
+                  name="specialtyId"
+                  checked={editingFields.specialtyId}
+                  onChange={handleEditFieldSelection}
+                />
+                <label htmlFor="specialtyId">Especialidade</label>
+                <select
+                  className={`form-control ${
+                    !editingFields.specialtyId ? "disabled" : ""
+                  }`}
+                  value={
+                    editingFields.specialtyId
+                      ? editEmployee.specialtyId || formData.specialtyId
+                      : ""
+                  }
+                  onChange={handleFormChange}
+                  disabled={!editingFields.specialtyId}
+                >
+                  {/* Opções de especialidade aqui */}
+                </select>
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+            Fechar
+          </Button>
+          <Button variant="primary" onClick={handleSaveEdit}>
+            Salvar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/*  COMEÇO DO MODAL DE ADIÇÃO  */}
+
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
           <Modal.Title>Adicionar Funcionário</Modal.Title>

@@ -97,9 +97,9 @@ router.get('/search/:query', verifyAvancadoAuth, async (req, res) => {
         const query = aql`
             FOR employee IN Employees
             FILTER employee._key == ${queryValue} ||
-                   LIKE(employee.Nome, CONCAT(${queryValue}, '%'), true) ||
+                   LIKE(employee.nome, CONCAT(${queryValue}, '%'), true) ||
                    employee.CPF == ${queryValue} ||
-                   LIKE(employee.OcupacaoAmbulatorio, CONCAT(${queryValue}, '%'), true)
+                   LIKE(employee.ocupacaoAmbulatorio, CONCAT(${queryValue}, '%'), true)
             RETURN employee
         `;
 
