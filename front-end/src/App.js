@@ -13,6 +13,7 @@ import SettingsPage from "./views/SettingsPage";
 import Layout from "./views/Layout";
 import BoasVindas from "./views/BoasVindas";
 import Prontuario from "./views/Prontuario";
+import PublicAgendamento from "./views/PublicAgendamento";
 
 export const AuthContext = createContext();
 
@@ -52,7 +53,7 @@ const App = () => {
     <AuthContext.Provider value={{ authData, setAuthData }}>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={authData ? <Layout /> : <Navigate to="/login" replace />}>
+        <Route path="/acesso" element={authData ? <Layout /> : <Navigate to="/login" replace />}>
         <Route index element={<BoasVindas />} />
           <Route path="agendar" element={<AgendamentoAgendar />} />
           <Route path="cancelar-agendamento" element={<AgendamentoCancelar />} />
@@ -65,6 +66,7 @@ const App = () => {
           <Route path="prontuario" element={<Prontuario />} /> {/* Adicione esta linha */}
           <Route path="especialidades" element={<Specialties />} />
         </Route>
+        <Route path="/" element={<PublicAgendamento />} />
         <Route path="*" element={<div>Página não encontrada</div>} />
       </Routes>
     </AuthContext.Provider>

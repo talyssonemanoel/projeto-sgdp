@@ -57,7 +57,7 @@ const Layout = () => {
     <div className="main-layout fonte">
       <nav className="n-avbar titulonav">
         <div className="nav-links">
-          <Link to="/">
+          <Link to="">
             <img className="logo-uern" src={logoUern} alt="UERN" />
           </Link>
           <div className="menu-nav-bar">
@@ -65,27 +65,27 @@ const Layout = () => {
               <ul className="nav-links">
               {(isMedio || isAdmin) && (
                   <li>
-                    <Link to="/agendar">Agendamento</Link>
+                    <Link to="agendar">Agendamento</Link>
                   </li>
                 )}
                 <li>
-                  <Link to="/buscar-paciente">Pacientes</Link>
+                  <Link to="buscar-paciente">Pacientes</Link>
                 </li>
                 {isAdmin && (
                   <li>
-                    <Link to="/buscar-especialista">Profissionais</Link>
+                    <Link to="buscar-especialista">Profissionais</Link>
                   </li>
                 )}
                 {(isMedio || isAdmin) && (
                 <li>
-                  <Link to="/especialidades">Especialidades</Link>
+                  <Link to="especialidades">Especialidades</Link>
                 </li>
                 )}
                 <li>
-                  <Link to="/prontuario">Prontuários</Link>
+                  <Link to="prontuario">Prontuários</Link>
                 </li>
                 <li>
-                  <Link to="/configuracoes">Configurações</Link>
+                  <Link to="configuracoes">Configurações</Link>
                 </li>
               </ul>
             </nav>
