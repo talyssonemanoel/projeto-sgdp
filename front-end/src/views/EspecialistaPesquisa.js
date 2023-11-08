@@ -11,13 +11,24 @@ const EspecialistaPesquisa = () => {
   const [employees, setEmployees] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedOccupation, setSelectedOccupation] = useState("Escolha uma função");
+  const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [noResultsMessage, setNoResultsMessage] = useState(""); // Mensagem de nenhum resultado
+  const [specialties, setSpecialties] = useState([]); // Para armazenar as opções de especialidade
+  const [selectedSpecialty, setSelectedSpecialty] = useState("");
+
+  const [occupations, setOccupations] = useState([
+    "Administrador",
+    "Assistente",
+    "Especialista",
+    "Outro",
+  ]);
   const [formData, setFormData] = useState({
-    Nome: "",
+    nome: "",
     CPF: "",
-    Endereco: "",
-    OcupacaoAmbulatorio: "",
+    endereco: "",
+    ocupacaoAmbulatorio: "",
     Email: "",
   });
   const [CPFIsValid, setCPFIsValid] = useState(true);
@@ -39,16 +50,16 @@ const EspecialistaPesquisa = () => {
 
   // Função para formatar CPF no padrão brasileiro (###.###.###-##)
   const formatCPF = (cpf) => {
-    cpf = cpf.replace(/\D/g, ''); // Remove caracteres não numéricos
+    cpf = cpf.replace(/\D/g, ""); // Remove caracteres não numéricos
     if (cpf.length !== 11) {
       return cpf; // Retorna o CPF como está se não tiver 11 dígitos
     }
-    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
   // Função para validar CPF
   const validateCPF = (cpf) => {
-    cpf = cpf.replace(/\D/g, ''); // Remove caracteres não numéricos
+    cpf = cpf.replace(/\D/g, ""); // Remove caracteres não numéricos
     if (cpf.length !== 11) {
       return false;
     }
@@ -90,14 +101,35 @@ const EspecialistaPesquisa = () => {
 
   // FIM DO VERIFICA CPF //
 
+  // BUSCA DE ESPECIALIDADES
+
+  useEffect(() => {
+    // Função para buscar especialidades
+    const fetchSpecialties = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await api.get(`/especialidade/all?token=${token}`);
+        const specialtyOptions = response.data;
+        setSpecialties(specialtyOptions);
+      } catch (error) {
+        console.error("Erro ao buscar especialidades:", error);
+      }
+    };
+
+    // Chame a função de busca de especialidades
+    fetchSpecialties();
+  }, []);
+
+  // OUTROS
+
   const handleShowModal = () => {
     setShowModal(true);
     // Limpe os campos do formulário ao abrir o modal
     setFormData({
-      Nome: "",
+      nome: "",
       CPF: "",
-      Endereco: "",
-      OcupacaoAmbulatorio: "",
+      endereco: "",
+      ocupacaoAmbulatorio: "",
       Email: "",
     });
   };
@@ -106,19 +138,21 @@ const EspecialistaPesquisa = () => {
     setShowModal(false);
     // Limpe os campos do formulário ao fechar o modal
     setFormData({
-      Nome: "",
+      nome: "",
       CPF: "",
-      Endereco: "",
-      OcupacaoAmbulatorio: "",
+      endereco: "",
+      ocupacaoAmbulatorio: "",
       Email: "",
     });
   };
 
-
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-
-    if (name === "CPF") {
+  
+    if (name === "occupation") {
+      setSelectedOccupation(value);
+      setShowSpecialtyDropdown(value === 'Especialista');
+    } else if (name === "CPF") {
       const formattedCPF = formatCPF(value);
       setFormData({
         ...formData,
@@ -128,6 +162,9 @@ const EspecialistaPesquisa = () => {
       // Verifique se o CPF é válido e atualize um estado de validação
       const isValidCPF = validateCPF(value);
       setCPFIsValid(isValidCPF);
+    } else if (name === "specialtyId") {
+      // Atualize o estado 'selectedSpecialty' com o valor da especialidade selecionada
+      setSelectedSpecialty(value);
     } else {
       setFormData({
         ...formData,
@@ -138,18 +175,24 @@ const EspecialistaPesquisa = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-
-    if (!CPFIsValid) {
-      // Impedir o envio do formulário se o CPF não for válido
+  
+    if (!CPFIsValid || selectedOccupation === "Escolha uma função") {
+      // Impedir o envio do formulário se o CPF não for válido ou nenhuma ocupação for selecionada
       return;
     }
-
+  
+    const dataToSubmit = {
+      ...formData,
+      ocupacaoAmbulatorio: selectedOccupation,
+      nomeEspecialidade: selectedSpecialty, // Inclua 'nomeEspecialidade' com o valor da especialidade selecionada
+    };
+  
     try {
       const token = localStorage.getItem("token");
-      const response = await api.post(`/doctors/add?token=${token}`, formData);
+      const response = await api.post(`/doctors/add?token=${token}`, dataToSubmit);
       // Lide com a resposta da adição do funcionário, se necessário
       handleCloseModal(); // Feche o modal após o envio bem-sucedido
-
+  
       // Após a adição bem-sucedida, atualize a lista de funcionários
       fetchEmployees(searchQuery);
     } catch (error) {
@@ -157,7 +200,6 @@ const EspecialistaPesquisa = () => {
       // Trate os erros apropriadamente
     }
   };
-
 
   // PESQUISA DE EMPREGADOS
 
@@ -177,8 +219,8 @@ const EspecialistaPesquisa = () => {
       // Preencher campos vazios com 'Sem dados' em vermelho
       const employeesWithSemDados = results.map((employee) => ({
         ...employee,
-        Nome: employee.Nome || <span style={{ color: "red" }}>Sem dados</span>,
-        OcupacaoAmbulatorio: employee.OcupacaoAmbulatorio || (
+        nome: employee.nome || <span style={{ color: "red" }}>Sem dados</span>,
+        ocupacaoAmbulatorio: employee.ocupacaoAmbulatorio || (
           <span style={{ color: "red" }}>Sem dados</span>
         ),
         CPF: employee.CPF || <span style={{ color: "red" }}>Sem dados</span>,
@@ -262,19 +304,17 @@ const EspecialistaPesquisa = () => {
                 <th>CPF</th>
                 <th>Email</th>
                 <th>Especialidade</th>
-                <th>Privilégios</th>
-                <th>Nome de Usuário</th>
+                <th>nome de Usuário</th>
               </tr>
             </thead>
             <tbody>
               {employees.map((employee) => (
                 <tr key={employee._id}>
-                  <td>{employee.Nome}</td>
-                  <td>{employee.OcupacaoAmbulatorio}</td>
+                  <td>{employee.nome}</td>
+                  <td>{employee.ocupacaoAmbulatorio}</td>
                   <td>{employee.CPF}</td>
                   <td>{employee.Email}</td>
                   <td>{employee.specialtyId}</td>
-                  <td>{employee.Privilegios}</td>
                   <td>{employee.username}</td>
                 </tr>
               ))}
@@ -289,13 +329,13 @@ const EspecialistaPesquisa = () => {
         <Modal.Body>
           <form onSubmit={handleFormSubmit}>
             <div className="form-group">
-              <label htmlFor="Nome">Nome</label>
+              <label htmlFor="nome">Nome</label>
               <input
                 type="text"
-                name="Nome"
-                id="Nome"
+                name="nome"
+                id="nome"
                 className="form-control"
-                value={formData.Nome}
+                value={formData.nome}
                 onChange={handleFormChange}
                 required
               />
@@ -306,7 +346,7 @@ const EspecialistaPesquisa = () => {
                 type="text"
                 name="CPF"
                 id="CPF"
-                className={`form-control ${CPFIsValid ? '' : 'is-invalid'}`}
+                className={`form-control ${CPFIsValid ? "" : "is-invalid"}`}
                 value={formData.CPF}
                 onChange={handleFormChange}
                 required
@@ -318,27 +358,57 @@ const EspecialistaPesquisa = () => {
               )}
             </div>
             <div className="form-group">
-              <label htmlFor="Endereco">Endereço</label>
+              <label htmlFor="endereco">Endereço</label>
               <input
                 type="text"
-                name="Endereco"
-                id="Endereco"
+                name="endereco"
+                id="endereco"
                 className="form-control"
-                value={formData.Endereco}
+                value={formData.endereco}
                 onChange={handleFormChange}
               />
             </div>
             <div className="form-group">
-              <label htmlFor="OcupacaoAmbulatorio">Função no Ambulatório</label>
-              <input
-                type="text"
-                name="OcupacaoAmbulatorio"
-                id="OcupacaoAmbulatorio"
+              <label htmlFor="occupation">Função no Ambulatório</label>
+              <select
+                name="occupation"
+                id="occupation"
                 className="form-control"
-                value={formData.OcupacaoAmbulatorio}
+                value={selectedOccupation}
                 onChange={handleFormChange}
-              />
+                required
+              >
+                <option value="">Selecione uma função</option>
+                {occupations.map((occupation) => (
+                  <option key={occupation} value={occupation}>
+                    {occupation}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            <div
+              className="form-group"
+              style={{ display: showSpecialtyDropdown ? "block" : "none" }}
+            >
+              <label htmlFor="specialtyId">Especialidade</label>
+              <select
+                name="specialtyId"
+                id="specialtyId"
+                className="form-control"
+                value={selectedSpecialty}
+                onChange={(e) => setSelectedSpecialty(e.target.value)}
+                required
+              >
+                <option value="">Selecione uma especialidade</option>
+                {specialties.map((specialty) => (
+                  <option key={specialty._id} value={specialty.name}>
+                    {specialty.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="form-group">
               <label htmlFor="Email">Email</label>
               <input
