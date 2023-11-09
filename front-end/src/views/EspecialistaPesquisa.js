@@ -24,7 +24,8 @@ const EspecialistaPesquisa = () => {
     specialtyId: false,
     username: false,
   });
-
+  const [editOccupation, setEditOccupation] = useState("");
+  const [editSpecialty, setEditSpecialty] = useState("");
   const [selectedOccupation, setSelectedOccupation] =
     useState("Escolha uma função");
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false);
@@ -119,11 +120,18 @@ const EspecialistaPesquisa = () => {
 
   // DITA O MODAL E FUNÇÕES DE EDIÇÃO
 
+  // Crie uma função que retorna os dados originais de um funcionário com base no _key
+function getOriginalEmployeeData(key) {
+  const originalEmployee = employees.find((employee) => employee._key === key);
+  return originalEmployee || {}; // Retorna um objeto vazio se não encontrar
+}
+
   const handleShowEditModal = (employee) => {
-    setEditEmployee(employee); // Defina o objeto do funcionário a ser editado
-    setShowEditModal(true); // Abra o modal
+    setEditEmployee(employee);
+    setEditOccupation(employee.ocupacaoAmbulatorio); // Preencha a função
+    setEditSpecialty(employee.nomeEspecialidade); // Preencha a especialidade
+    setShowEditModal(true);
   };
-  
 
   // Função para lidar com a submissão do formulário de edição
   const handleEditFormSubmit = async (e) => {
@@ -136,7 +144,15 @@ const EspecialistaPesquisa = () => {
         ocupacaoAmbulatorio: editEmployee.ocupacaoAmbulatorio,
         Email: editEmployee.Email,
         nomeEspecialidade: editEmployee.nomeEspecialidade,
+        CPF: editEmployee.CPF
       };
+
+      if (editEmployee && editOccupation === "Especialista" && !editSpecialty) {
+        // Se "Especialista" for selecionado na função e "Especialidade" estiver vazio
+        // Exiba uma mensagem de erro e não permita o envio do formulário
+        alert("Selecione uma especialidade para o especialista.");
+        return;
+      }
 
       if (editEmployee.CPF) {
         const isValidCPF = validateCPF(editEmployee.CPF);
@@ -145,6 +161,37 @@ const EspecialistaPesquisa = () => {
           setCPFIsValid(false);
           return;
         }
+      }
+
+      // Antes de continuar com a lógica de envio do formulário, crie um objeto temporário com os campos relevantes
+      const relevantDataToSubmit = {
+        nome: editEmployee.nome,
+        endereco: editEmployee.endereco,
+        ocupacaoAmbulatorio: editEmployee.ocupacaoAmbulatorio,
+        Email: editEmployee.Email,
+        nomeEspecialidade: editEmployee.nomeEspecialidade,
+        CPF: editEmployee.CPF, // Se houver algum campo adicional relevante
+      };
+      
+      if (editEmployee) {
+        const originalEmployeeData = getOriginalEmployeeData(editEmployee._key);
+    
+        // Realize a comparação entre editEmployee e originalEmployeeData
+        const isDataUnchanged =
+          editEmployee.nome === originalEmployeeData.nome &&
+          editEmployee.endereco === originalEmployeeData.endereco &&
+          editEmployee.ocupacaoAmbulatorio === originalEmployeeData.ocupacaoAmbulatorio &&
+          editEmployee.Email === originalEmployeeData.Email &&
+          editEmployee.nomeEspecialidade === originalEmployeeData.nomeEspecialidade &&
+          editEmployee.CPF === originalEmployeeData.CPF;
+    
+        if (isDataUnchanged) {
+          // Se os dados não foram alterados
+          alert("Nenhum campo foi alterado.");
+          return;
+        }
+    
+        // Continuar com o envio dos dados editados
       }
 
       try {
@@ -158,7 +205,7 @@ const EspecialistaPesquisa = () => {
         handleCloseEditModal();
         fetchEmployees(searchQuery);
       } catch (error) {
-        console.error("Erro ao editar funcionário:", error);
+        console.error("Erro ao editar profissional:", error);
         // Trate os erros apropriadamente
       }
     }
@@ -271,34 +318,39 @@ const EspecialistaPesquisa = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!CPFIsValid || selectedOccupation === "Escolha uma função") {
       // Impedir o envio do formulário se o CPF não for válido ou nenhuma ocupação for selecionada
       return;
     }
-
+  
     const dataToSubmit = {
       ...formData,
       ocupacaoAmbulatorio: selectedOccupation,
-      nomeEspecialidade: selectedSpecialty, // Inclua 'nomeEspecialidade' com o valor da especialidade selecionada
     };
-
+  
+    // Inclua 'nomeEspecialidade' com o valor da especialidade selecionada
+    if (selectedOccupation === "Especialista" && selectedSpecialty) {
+      dataToSubmit.nomeEspecialidade = selectedSpecialty;
+    }
+  
     try {
       const token = localStorage.getItem("token");
       const response = await api.post(
         `/doctors/add?token=${token}`,
         dataToSubmit
       );
+  
       // Lide com a resposta da adição do funcionário, se necessário
       handleCloseModal(); // Feche o modal após o envio bem-sucedido
-
+  
       // Após a adição bem-sucedida, atualize a lista de funcionários
       fetchEmployees(searchQuery);
     } catch (error) {
-      console.error("Erro ao adicionar funcionário:", error);
+      console.error("Erro ao adicionar profissional:", error);
       // Trate os erros apropriadamente
     }
-  };
+  };  
 
   // PESQUISA DE EMPREGADOS
 
@@ -329,7 +381,10 @@ const EspecialistaPesquisa = () => {
         specialtyId: employee.specialtyId || (
           <span style={{ color: "red" }}>Sem dados</span>
         ),
-        Privilegios: employee.Privilegios || (
+        endereco: employee.endereco || (
+          <span style={{ color: "red" }}>Sem dados</span>
+        ),
+        nomeEspecialidade: employee.nomeEspecialidade || (
           <span style={{ color: "red" }}>Sem dados</span>
         ),
         username: employee.username || (
@@ -339,7 +394,7 @@ const EspecialistaPesquisa = () => {
 
       setEmployees(employeesWithSemDados);
     } catch (error) {
-      console.error("Erro ao buscar funcionários:", error);
+      console.error("Erro ao buscar profissionais:", error);
     } finally {
       setIsLoading(false);
     }
@@ -373,7 +428,7 @@ const EspecialistaPesquisa = () => {
         Página de Pesquisa de Especialistas
       </h1>
       <button className="button-especialista" onClick={handleShowModal}>
-        Adicionar Funcionário
+        Adicionar Profissionais
       </button>
 
       <div className="search-form">
@@ -434,7 +489,7 @@ const EspecialistaPesquisa = () => {
 
       <Modal show={showEditModal} onHide={handleCloseEditModal}>
         <Modal.Header closeButton>
-          <Modal.Title>Editar Funcionário</Modal.Title>
+          <Modal.Title>Editar Profissional</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form onSubmit={handleEditFormSubmit}>
@@ -447,6 +502,7 @@ const EspecialistaPesquisa = () => {
                 className="form-control"
                 onChange={handleEditFormChange}
                 value={editEmployee.nome || ""}
+                required
               />
             </div>
             <div className="form-group">
@@ -458,6 +514,7 @@ const EspecialistaPesquisa = () => {
                 className="form-control"
                 onChange={handleEditFormChange}
                 value={editEmployee.CPF || ""}
+                required
               />
             </div>
             <div className="form-group">
@@ -477,8 +534,9 @@ const EspecialistaPesquisa = () => {
                 name="occupation"
                 id="occupation"
                 className="form-control"
-                value={editEmployee ? editEmployee.ocupacaoAmbulatorio : ""}
-                onChange={handleEditFormChange}
+                value={editOccupation}
+                onChange={(e) => setEditOccupation(e.target.value)}
+                required
               >
                 <option value="">Selecione uma função</option>
                 {occupations.map((occupation) => (
@@ -491,15 +549,17 @@ const EspecialistaPesquisa = () => {
 
             <div
               className="form-group"
-              style={{ display: showSpecialtyDropdown ? "block" : "none" }}
+              style={{
+                display: editOccupation === "Especialista" ? "block" : "none",
+              }}
             >
               <label htmlFor="specialtyId">Especialidade</label>
               <select
                 name="specialtyId"
                 id="specialtyId"
                 className="form-control"
-                value={editEmployee ? editEmployee.specialtyId : ""}
-                onChange={handleEditFormChange}
+                value={editSpecialty}
+                onChange={(e) => setEditSpecialty(e.target.value)}
               >
                 <option value="">Selecione uma especialidade</option>
                 {specialties.map((specialty) => (
@@ -519,6 +579,7 @@ const EspecialistaPesquisa = () => {
                 className="form-control"
                 value={editEmployee ? editEmployee.Email : ""}
                 onChange={handleEditFormChange}
+                required
               />
             </div>
             <Modal.Footer>
@@ -537,7 +598,7 @@ const EspecialistaPesquisa = () => {
 
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
-          <Modal.Title>Adicionar Funcionário</Modal.Title>
+          <Modal.Title>Adicionar Profissional</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form onSubmit={handleFormSubmit}>
@@ -635,7 +696,7 @@ const EspecialistaPesquisa = () => {
                 Fechar
               </Button>
               <Button variant="primary" type="submit">
-                Adicionar Funcionário
+                Adicionar Profissional
               </Button>
             </Modal.Footer>
           </form>
