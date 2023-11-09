@@ -121,10 +121,12 @@ const EspecialistaPesquisa = () => {
   // DITA O MODAL E FUNÇÕES DE EDIÇÃO
 
   // Crie uma função que retorna os dados originais de um funcionário com base no _key
-function getOriginalEmployeeData(key) {
-  const originalEmployee = employees.find((employee) => employee._key === key);
-  return originalEmployee || {}; // Retorna um objeto vazio se não encontrar
-}
+  function getOriginalEmployeeData(key) {
+    const originalEmployee = employees.find(
+      (employee) => employee._key === key
+    );
+    return originalEmployee || {}; // Retorna um objeto vazio se não encontrar
+  }
 
   const handleShowEditModal = (employee) => {
     setEditEmployee(employee);
@@ -141,11 +143,18 @@ function getOriginalEmployeeData(key) {
       const dataToSubmit = {
         nome: editEmployee.nome,
         endereco: editEmployee.endereco,
-        ocupacaoAmbulatorio: editEmployee.ocupacaoAmbulatorio,
+        ocupacaoAmbulatorio: editOccupation,
         Email: editEmployee.Email,
-        nomeEspecialidade: editEmployee.nomeEspecialidade,
-        CPF: editEmployee.CPF
+        nomeEspecialidade: editSpecialty,
+        CPF: editEmployee.CPF,
       };
+
+      if (editOccupation !== "Especialista") {
+        // Se a ocupação não for 'Especialista', defina 'nomeEspecialidade' como uma string vazia
+        dataToSubmit.nomeEspecialidade = "";
+      } else {
+        dataToSubmit.nomeEspecialidade = editSpecialty;
+      }
 
       if (editEmployee && editOccupation === "Especialista" && !editSpecialty) {
         // Se "Especialista" for selecionado na função e "Especialidade" estiver vazio
@@ -167,30 +176,30 @@ function getOriginalEmployeeData(key) {
       const relevantDataToSubmit = {
         nome: editEmployee.nome,
         endereco: editEmployee.endereco,
-        ocupacaoAmbulatorio: editEmployee.ocupacaoAmbulatorio,
+        ocupacaoAmbulatorio: editOccupation,
         Email: editEmployee.Email,
-        nomeEspecialidade: editEmployee.nomeEspecialidade,
+        nomeEspecialidade: editSpecialty,
         CPF: editEmployee.CPF, // Se houver algum campo adicional relevante
       };
-      
+
       if (editEmployee) {
         const originalEmployeeData = getOriginalEmployeeData(editEmployee._key);
-    
+
         // Realize a comparação entre editEmployee e originalEmployeeData
         const isDataUnchanged =
           editEmployee.nome === originalEmployeeData.nome &&
           editEmployee.endereco === originalEmployeeData.endereco &&
-          editEmployee.ocupacaoAmbulatorio === originalEmployeeData.ocupacaoAmbulatorio &&
+          editOccupation === originalEmployeeData.ocupacaoAmbulatorio &&
           editEmployee.Email === originalEmployeeData.Email &&
-          editEmployee.nomeEspecialidade === originalEmployeeData.nomeEspecialidade &&
+          editSpecialty === originalEmployeeData.nomeEspecialidade &&
           editEmployee.CPF === originalEmployeeData.CPF;
-    
+
         if (isDataUnchanged) {
           // Se os dados não foram alterados
           alert("Nenhum campo foi alterado.");
           return;
         }
-    
+
         // Continuar com o envio dos dados editados
       }
 
@@ -240,6 +249,23 @@ function getOriginalEmployeeData(key) {
         // Atualize os outros campos
         const updatedEmployee = { ...editEmployee, [name]: value };
         setEditEmployee(updatedEmployee);
+      }
+    }
+  };
+
+  // APAGAR ESPECIALISTAS
+
+  const handleDeleteEmployee = async () => {
+    if (editEmployee && editEmployee._key) {
+      try {
+        const token = localStorage.getItem("token");
+        await api.delete(`/doctors/${editEmployee._key}?token=${token}`);
+        // Lide com a exclusão bem-sucedida, se necessário
+        handleCloseEditModal();
+        fetchEmployees(searchQuery);
+      } catch (error) {
+        console.error("Erro ao excluir funcionário:", error);
+        // Trate os erros apropriadamente
       }
     }
   };
@@ -318,39 +344,39 @@ function getOriginalEmployeeData(key) {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!CPFIsValid || selectedOccupation === "Escolha uma função") {
       // Impedir o envio do formulário se o CPF não for válido ou nenhuma ocupação for selecionada
       return;
     }
-  
+
     const dataToSubmit = {
       ...formData,
       ocupacaoAmbulatorio: selectedOccupation,
     };
-  
+
     // Inclua 'nomeEspecialidade' com o valor da especialidade selecionada
     if (selectedOccupation === "Especialista" && selectedSpecialty) {
       dataToSubmit.nomeEspecialidade = selectedSpecialty;
     }
-  
+
     try {
       const token = localStorage.getItem("token");
       const response = await api.post(
         `/doctors/add?token=${token}`,
         dataToSubmit
       );
-  
+
       // Lide com a resposta da adição do funcionário, se necessário
       handleCloseModal(); // Feche o modal após o envio bem-sucedido
-  
+
       // Após a adição bem-sucedida, atualize a lista de funcionários
       fetchEmployees(searchQuery);
     } catch (error) {
       console.error("Erro ao adicionar profissional:", error);
       // Trate os erros apropriadamente
     }
-  };  
+  };
 
   // PESQUISA DE EMPREGADOS
 
@@ -558,7 +584,7 @@ function getOriginalEmployeeData(key) {
                 name="specialtyId"
                 id="specialtyId"
                 className="form-control"
-                value={editSpecialty}
+                value={editSpecialty === "[object Object]" ? "" : editSpecialty}
                 onChange={(e) => setEditSpecialty(e.target.value)}
               >
                 <option value="">Selecione uma especialidade</option>
@@ -583,6 +609,9 @@ function getOriginalEmployeeData(key) {
               />
             </div>
             <Modal.Footer>
+              <Button variant="danger" onClick={handleDeleteEmployee}>
+                Excluir Profissional
+              </Button>
               <Button variant="secondary" onClick={handleCloseEditModal}>
                 Fechar
               </Button>
