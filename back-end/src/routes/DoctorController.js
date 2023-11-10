@@ -188,7 +188,7 @@ router.put('/:key', verifyAvancadoAuth, async (req, res) => {
 });
 
 // Rota para buscar médicos ao vivo
-router.get('/livesearch', verifySimplesAuth, async (req, res) => {
+router.get('/livesearch', async (req, res) => {
     try {
         // Obter a consulta de busca do parâmetro de consulta 'q'
         const query = req.query.q;
@@ -201,9 +201,10 @@ router.get('/livesearch', verifySimplesAuth, async (req, res) => {
         // Buscar no banco de dados os médicos cujos nomes correspondem à consulta de busca
         // Aqui estamos usando uma consulta AQL para buscar no ArangoDB
         const cursor = await db.query(aql`
-            FOR doc IN Person
-            FILTER CONTAINS(LOWER(doc.Nome), LOWER(${query})) && HAS(doc, "specialtyId")
+            FOR doc IN Employees
+            FILTER CONTAINS(LOWER(doc.Nome), LOWER(${query})) && OcupacaoAmbulatorio == "especialista"
             RETURN doc
+            
         `);
 
         // Converter o cursor em um array de resultados

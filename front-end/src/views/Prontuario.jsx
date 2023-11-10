@@ -55,6 +55,7 @@ const Prontuario = () => {
     try {
       const response = await api.get('/agendar/GetServicesByPatientKey', { params: { q: pacienteId, ambulatorio: ambulatorio } });
       setAtendimentos(response.data);
+      console.log(setActiveButton)
     } catch (error) {
       console.error('Erro ao buscar dados de atendimentos:', error);
     }
@@ -67,8 +68,6 @@ const Prontuario = () => {
   const handlePacienteChange = (selectedOption) => {
     setSelectedPaciente(selectedOption);
     loadAtendimentos(selectedOption.value, activeButton);
-    console.log("proximo output é o paciente e o botao")
-    console.log(selectedOption.value, activeButton)
   };
 
   const handlePacienteClear = () => {
@@ -88,7 +87,7 @@ const Prontuario = () => {
         (() => {
           const birthday = moment(selectedPaciente.birthday);
           const age = moment().diff(birthday, 'years');
-  
+
           return (
             <div className='body-prontuario d-flex'>
               <div className=''>
@@ -97,22 +96,22 @@ const Prontuario = () => {
                     Evolução profissional
                   </div>
                   <div>
-                  {types.map(type => (
-                    <button 
-                    className={`w-100 btn-menu-l ${selectedSpecialty === type ? 'selected' : ''}`}  
-                    key={type} 
-                    onClick={() => {
-                      if (selectedSpecialty === type) {
-                        setSelectedSpecialty(''); // Desmarque o botão se já estiver selecionado
-                        setCurrentPage(0);
-                      } else {
-                        setSelectedSpecialty(type); // Selecione o botão se não estiver selecionado
-                        setCurrentPage(0);
-                      }
-                    }}
-                  >
-                    {type}
-                  </button>
+                    {types.map(type => (
+                      <button
+                        className={`w-100 btn-menu-l ${selectedSpecialty === type ? 'selected' : ''}`}
+                        key={type}
+                        onClick={() => {
+                          if (selectedSpecialty === type) {
+                            setSelectedSpecialty(''); // Desmarque o botão se já estiver selecionado
+                            setCurrentPage(0);
+                          } else {
+                            setSelectedSpecialty(type); // Selecione o botão se não estiver selecionado
+                            setCurrentPage(0);
+                          }
+                        }}
+                      >
+                        {type}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -121,98 +120,182 @@ const Prontuario = () => {
                 <div className='p-content h-100'>
                   {selectedSpecialty ? (
                     <div>
-                      <div className= "cabecalho-prontuario">
+                      <div className="cabecalho-prontuario">
                         <h5>{selectedPaciente.label}</h5>
                         <h6>{age} anos</h6>
                       </div>
                       <div>
-                        <ProntuarioLinhaDoTempo atendimentos={filteredAtendimentos} currentPage={currentPage} setCurrentPage={setCurrentPage}/>
+                        <ProntuarioLinhaDoTempo atendimentos={filteredAtendimentos} currentPage={currentPage} setCurrentPage={setCurrentPage} />
                       </div>
                     </div>
-                  ) : (
-                    <div className= "dados-gerais-do-paciente h-100">
-                    <div className='w-100 text-center'>
-                      <div>
-                        <h3>FICHA INDIVIDUAL</h3>
+                  ) : (activeButton === 'Geral' ? (
+                    <div className="dados-gerais-do-paciente h-100">
+                      <div className='w-100 text-center'>
+                        <div>
+                          <h3>FICHA INDIVIDUAL</h3>
+                        </div>
+                        <div className='divisor-subtitle'>
+                          <h5>IDENTIFICAÇÃO</h5>
+                        </div>
                       </div>
-                      <div className='divisor-subtitle'>
-                        <h5>IDENTIFICAÇÃO</h5>
+                      <h6>Nome completo: {selectedPaciente.label}</h6>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Data de nascimento: {moment(selectedPaciente.birthday).format('DD/MM/YYYY')}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Cartão do SUS: {selectedPaciente.cartaoSus}</h6>
+                        </div>
                       </div>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>RG: {selectedPaciente.rg}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>CPF: {selectedPaciente.cpf}</h6>
+                        </div>
+                      </div>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Etnia: {selectedPaciente.etnia}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Escolaridade: {selectedPaciente.escolaridade}</h6>
+                        </div>
+                      </div>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Estado civil: {selectedPaciente.estadoCivil}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Ocupação: {selectedPaciente.ocupacao}</h6>
+                        </div>
+                      </div>
+                      <h6>Nome da mãe: {selectedPaciente.nomeDaMae}</h6>
+                      <div className='w-100 text-center'>
+                        <div className='divisor-subtitle'>
+                          <h5>ENDEREÇO</h5>
+                        </div>
+                      </div>
+                      <h6>Logradouro: {selectedPaciente.logradouro}</h6>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Número: {selectedPaciente.numeroEndereco}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Bairro: {selectedPaciente.bairro}</h6>
+                        </div>
+                      </div>
+                      <h6>Complemento: {selectedPaciente.complementoEndereco}</h6>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Cidade: {selectedPaciente.cidade}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Estado: {selectedPaciente.estado}</h6>
+                        </div>
+                      </div>
+                      <div className='w-100 text-center'>
+                        <div className='divisor-subtitle'>
+                          <h5>CONTATO</h5>
+                        </div>
+                      </div>
+                      <h6>Email: {selectedPaciente.email}</h6>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Telefone: {selectedPaciente.telefone}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Whatsapp: {selectedPaciente.whatsapp}</h6>
+                        </div>
+                      </div>
+                      <h6>Em caso de emergência: {selectedPaciente.contatoEmergencia}</h6>
                     </div>
-                    <h6>Nome completo: {selectedPaciente.label}</h6>
-                    <div className='d-flex'>
-                      <div className='col-6'>
-                        <h6>Data de nascimento: {moment(selectedPaciente.birthday).format('DD/MM/YYYY')}</h6>
+                    
+                    ) : (
+
+                    <div className="dados-gerais-do-paciente h-100">
+                      <div className='w-100 text-center'>
+                        <div>
+                          <h3>ACOLHIMENTO INTERPROFISSIONAL</h3>
+                        </div>
+                        <div className='divisor-subtitle'>
+                          <h5>PRONTUÁRIO INDIVIDUAL</h5>
+                        </div>
                       </div>
-                      <div className='col-6'>
-                        <h6>Cartão do SUS: {selectedPaciente.cartaoSus}</h6>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Nome: {selectedPaciente.label}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Idade: {age} anos</h6>
+                        </div>
                       </div>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>RG: {selectedPaciente.rg}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>CPF: {selectedPaciente.cpf}</h6>
+                        </div>
+                      </div>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Etnia: {selectedPaciente.etnia}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Escolaridade: {selectedPaciente.escolaridade}</h6>
+                        </div>
+                      </div>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Estado civil: {selectedPaciente.estadoCivil}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Ocupação: {selectedPaciente.ocupacao}</h6>
+                        </div>
+                      </div>
+                      <h6>Nome da mãe: {selectedPaciente.nomeDaMae}</h6>
+                      <div className='w-100 text-center'>
+                        <div className='divisor-subtitle'>
+                          <h5>ENDEREÇO</h5>
+                        </div>
+                      </div>
+                      <h6>Logradouro: {selectedPaciente.logradouro}</h6>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Número: {selectedPaciente.numeroEndereco}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Bairro: {selectedPaciente.bairro}</h6>
+                        </div>
+                      </div>
+                      <h6>Complemento: {selectedPaciente.complementoEndereco}</h6>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Cidade: {selectedPaciente.cidade}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Estado: {selectedPaciente.estado}</h6>
+                        </div>
+                      </div>
+                      <div className='w-100 text-center'>
+                        <div className='divisor-subtitle'>
+                          <h5>CONTATO</h5>
+                        </div>
+                      </div>
+                      <h6>Email: {selectedPaciente.email}</h6>
+                      <div className='d-flex'>
+                        <div className='col-6'>
+                          <h6>Telefone: {selectedPaciente.telefone}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Whatsapp: {selectedPaciente.whatsapp}</h6>
+                        </div>
+                      </div>
+                      <h6>Em caso de emergência: {selectedPaciente.contatoEmergencia}</h6>
                     </div>
-                    <div className='d-flex'>
-                      <div className='col-6'>
-                        <h6>RG: {selectedPaciente.rg}</h6>
-                      </div>
-                      <div className='col-6'>
-                        <h6>CPF: {selectedPaciente.cpf}</h6>
-                      </div>
-                    </div>
-                    <div className='d-flex'>
-                      <div className='col-6'>
-                        <h6>Etnia: {selectedPaciente.etnia}</h6>
-                      </div>
-                      <div className='col-6'>
-                        <h6>Escolaridade: {selectedPaciente.escolaridade}</h6>
-                      </div>
-                    </div>
-                    <div className='d-flex'>
-                      <div className='col-6'>
-                        <h6>Estado civil: {selectedPaciente.estadoCivil}</h6>
-                      </div>
-                      <div className='col-6'>
-                        <h6>Ocupação: {selectedPaciente.ocupacao}</h6>
-                      </div>
-                    </div>
-                    <h6>Nome da mãe: {selectedPaciente.nomeDaMae}</h6>
-                    <div className='w-100 text-center'>
-                      <div className='divisor-subtitle'>
-                        <h5>ENDEREÇO</h5>
-                      </div>
-                    </div>
-                    <h6>Logradouro: {selectedPaciente.logradouro}</h6>
-                    <div className='d-flex'>
-                      <div className='col-6'>
-                        <h6>Número: {selectedPaciente.numeroEndereco}</h6>
-                      </div>
-                      <div className='col-6'>
-                        <h6>Bairro: {selectedPaciente.bairro}</h6>
-                      </div>
-                    </div>
-                    <h6>Complemento: {selectedPaciente.complementoEndereco}</h6>
-                    <div className='d-flex'>
-                      <div className='col-6'>
-                        <h6>Cidade: {selectedPaciente.cidade}</h6>
-                      </div>
-                      <div className='col-6'>
-                        <h6>Estado: {selectedPaciente.estado}</h6>
-                      </div>
-                    </div>
-                    <div className='w-100 text-center'>
-                      <div className='divisor-subtitle'>
-                        <h5>CONTATO</h5>
-                      </div>
-                    </div>
-                    <h6>Email: {selectedPaciente.email}</h6>
-                    <div className='d-flex'>
-                      <div className='col-6'>
-                        <h6>Telefone: {selectedPaciente.telefone}</h6>
-                      </div>
-                      <div className='col-6'>
-                        <h6>Whatsapp: {selectedPaciente.whatsapp}</h6>
-                      </div>
-                    </div>
-                    <h6>Em caso de emergência: {selectedPaciente.contatoEmergencia}</h6>
-                  </div>
-                  
+                  )
                   )}
                 </div>
               </div>
@@ -233,6 +316,6 @@ const Prontuario = () => {
       )}
     </div>
   );
-      };
-  export default Prontuario;
-  
+};
+export default Prontuario;
+

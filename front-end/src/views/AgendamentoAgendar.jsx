@@ -178,7 +178,7 @@ const AgendamentoAgendar = () => {
         <div className="mini-calendar">
           <Calendar onChange={handleDateChange} value={selectedDate} />
         </div>
-        <div className="input-group mb-3 input-especialista">
+        <div className="input-group mb-3">
           <span className="input-group-text" id="basic-addon1">
             <i className="fa-solid fa-user-doctor" style={{ color: '#0d6efd' }}></i>
           </span>

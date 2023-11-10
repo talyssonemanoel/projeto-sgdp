@@ -52,7 +52,7 @@ router.post('/add', verifySimplesAuth, async (req, res) => {
 
 
         const patientData = {
-            Nome,
+            nome,
             dataDeNascimento,
             cartaoSus,
             rg,
