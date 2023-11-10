@@ -24,7 +24,7 @@ const login = async () => {
       localStorage.setItem("isAdmin", isAdmin);
       localStorage.setItem("token", response.data.token);
       setAuthData(response.data);
-      navigate("/");
+      navigate("/acesso");
     } else {
       throw new Error("Usuário ou senha incorretos");
     }

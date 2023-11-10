@@ -121,6 +121,10 @@ async function verifyAvancadoAuth(req, res, next) {
     const user = await getUserById(userId);
 
     if (user && user.Privilegios === 'Avancado') {
+      req.user = {
+        id: userId,
+        // Outras informações do usuário, se necessário
+      };
       // Se o usuário tiver o atributo 'Privilegios' igual a 'Avancado', continue para a próxima função de middleware
       next();
     } else {

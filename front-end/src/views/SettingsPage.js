@@ -31,7 +31,7 @@ const SettingsPage = () => {
 
     const closeServerErrorModal = () => {
         setServerError(false);
-        navigate("/");
+        navigate("/acesso");
     };
 
     useEffect(() => {

@@ -3,6 +3,9 @@ const app = express();
 const router = express.Router();
 const { Database, aql } = require('arangojs');
 const bcrypt = require('bcrypt');
+const moment = require('moment'); // Importe a biblioteca 'moment' para trabalhar com datas e horas
+const uuid = require('uuid');
+const _ = require('lodash');
 
 const { verifyAvancadoAuth, verifySimplesAuth } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
 const { generateUniqueUsername, generateRandomPassword, sendLoginCredentials } = require('./OtherFunctions');
@@ -20,47 +23,31 @@ const db = new Database({
 // Middleware para permitir o uso do JSON no corpo da requisição
 app.use(express.json());
 
-const collectionName = 'Person';
+const collectionName = 'Employees';
 
 // Rota para adicionar funcionários com verificação de autenticação
 router.post('/add', verifyAvancadoAuth, async (req, res) => {
     try {
-        const requiredFields = ['Nome', 'CPF', 'OcupacaoAmbulatorio', 'Email'];
+        const requiredFields = ['nome', 'CPF', 'ocupacaoAmbulatorio', 'Email'];
         for (const field of requiredFields) {
             if (!req.body[field]) {
                 return res.status(400).json({ error: `Campo '${field}' é obrigatório.` });
             }
         }
 
-        const { Nome, Endereco, OcupacaoAmbulatorio, CPF, specialtyId, patientId, Email } = req.body;
+        const { nome, endereco, ocupacaoAmbulatorio, CPF, nomeEspecialidade, Email } = req.body;
 
         let employeeData = {
-            Nome,
-            Endereco,
-            OcupacaoAmbulatorio,
+            nome,
+            endereco,
+            ocupacaoAmbulatorio,
             CPF,
+            nomeEspecialidade,
             Email, // Adicione o campo de email para Employees
         };
 
-        if (OcupacaoAmbulatorio === 'Gerenciador') {
-            employeeData.Privilegios = 'Avancado';
-        } else if (OcupacaoAmbulatorio === 'Agendador') {
-            employeeData.Privilegios = 'Intermediario';
-        } else {
-            // Para outros casos (Especialistas, Vacinacao, etc.)
-            employeeData.Privilegios = 'Simples';
-        }
-
-        if (specialtyId) {
-            employeeData.specialtyId = specialtyId;
-        }
-
-        if (patientId) {
-            employeeData.patientId = patientId;
-        }
-
         // Gere o atributo 'username' com base no nome
-        const username = await generateUniqueUsername(Nome);
+        const username = await generateUniqueUsername(nome);
 
         // Gere uma senha aleatória
         const password = generateRandomPassword();
@@ -110,9 +97,9 @@ router.get('/search/:query', verifyAvancadoAuth, async (req, res) => {
         const query = aql`
             FOR employee IN Employees
             FILTER employee._key == ${queryValue} ||
-                   LIKE(employee.Nome, CONCAT(${queryValue}, '%'), true) ||
+                   LIKE(employee.nome, CONCAT(${queryValue}, '%'), true) ||
                    employee.CPF == ${queryValue} ||
-                   LIKE(employee.OcupacaoAmbulatorio, CONCAT(${queryValue}, '%'), true)
+                   LIKE(employee.ocupacaoAmbulatorio, CONCAT(${queryValue}, '%'), true)
             RETURN employee
         `;
 
@@ -126,58 +113,111 @@ router.get('/search/:query', verifyAvancadoAuth, async (req, res) => {
     }
 });
 
+//ROTA PARA APAGAR PROFISSIONAL COM SEGURANÇA DE LOG
 
-// Rota para excluir um especialista por _key
 router.delete('/:key', verifyAvancadoAuth, async (req, res) => {
     try {
-        const key = req.params.key; // Obtém o _key a partir dos parâmetros da URL
+        const key = req.params.key; // Obtém a chave a partir dos parâmetros da URL
 
-        // Primeiro, obtenha o médico da coleção 'Person' para obter o 'personId'
-        const doctor = await db.collection(collectionName).document(key);
+        // Passo 1: Obter os detalhes atuais do especialista
+        const query = `
+            FOR doc IN ${collectionName}
+            FILTER doc._key == @key
+            RETURN doc
+        `;
 
-        if (!doctor) {
-            return res.status(404).json({ error: 'Especialista não encontrado' });
-        }
+        const currentData = await db.query(query, { key }).then((cursor) => cursor.next());
 
-        // Obtenha o 'personId' do médico
-        const personId = doctor.personId;
+        if (currentData) {
+            // Passo 2: Inserir as informações atuais no 'logData'
+            const logData = {
+                _key: uuid.v4(),
+                author: req.user.id, // Autor da modificação a partir do usuário autenticado
+                timestamp: moment().format('YYYY-MM-DD HH:mm:ss'), // Hora e data da modificação
+                oldData: currentData, // Dados atuais que foram excluídos
+            };
 
-        // Remova o médico da coleção 'Person'
-        const resultPerson = await db.collection(collectionName).remove(key);
+            // Insira 'logData' na coleção 'logData'
+            const logResult = await db.collection('logData').save(logData);
 
-        // Verifique se a operação de remoção na coleção 'Person' foi bem-sucedida
-        if (!resultPerson) {
-            return res.status(404).json({ error: 'Especialista não encontrado' });
-        }
+            // Passo 3: Excluir o especialista da coleção principal
+            const deleteQuery = `
+                FOR doc IN ${collectionName}
+                FILTER doc._key == @key
+                REMOVE doc IN ${collectionName}
+                RETURN OLD
+            `;
 
-        // Em seguida, remova o usuário da coleção 'usuarios' usando o 'personId'
-        const user = await db.collection('usuarios').document(personId);
+            const deleteResult = await db.query(deleteQuery, { key });
 
-        if (user) {
-            const resultUser = await db.collection('usuarios').remove(personId);
-            if (!resultUser) {
-                return res.status(500).json({ error: 'Erro ao excluir o usuário vinculado' });
+            if (deleteResult) {
+                res.status(200).json({ message: 'Especialista excluído com sucesso' });
+            } else {
+                res.status(404).json({ error: 'Especialista não encontrado' });
             }
+        } else {
+            res.status(404).json({ error: 'Especialista não encontrado' });
         }
-
-        res.status(204).json({ message: 'Especialista excluído com sucesso' });
     } catch (error) {
         console.error('Erro ao excluir especialista:', error);
         res.status(500).json({ error: 'Erro ao excluir especialista' });
     }
 });
 
-// Rota para editar um especialista por _key
+//ROTA PARA ATUALIZAR INFORMAÇÕES DO PROFISSIONAL COM SEGURANÇA DE LOG
+
 router.put('/:key', verifyAvancadoAuth, async (req, res) => {
     try {
         const key = req.params.key; // Obtém o _key a partir dos parâmetros da URL
         const updatedData = req.body; // Dados atualizados a partir do corpo da requisição
 
-        // Atualiza os detalhes do especialista com base no _key
-        const result = await db.collection(collectionName).update(key, updatedData);
+        // Passo 1: Obter os detalhes atuais do especialista
+        const query = `
+            FOR doc IN ${collectionName}
+            FILTER doc._key == @key
+            RETURN doc
+        `;
 
-        if (result) {
-            res.status(200).json({ message: 'Especialista atualizado com sucesso' });
+        const currentData = await db.query(query, { key }).then((cursor) => cursor.next());
+
+        if (currentData) {
+            // Passo 2: Determinar as informações alteradas
+            const changes = {};
+
+            for (const key in updatedData) {
+                if (!_.isEqual(updatedData[key], currentData[key])) {
+                    changes[key] = currentData[key];
+                }
+            }
+
+            // Passo 3: Inserir as informações antigas alteradas em 'logData'
+            if (Object.keys(changes).length > 0) {
+                const logData = {
+                    _key: uuid.v4(),
+                    author: req.user.id, // Autor da modificação a partir do usuário autenticado
+                    timestamp: moment().format('YYYY-MM-DD HH:mm:ss'), // Hora e data da modificação
+                    oldData: changes, // Dados antigos que foram alterados
+                };
+
+                // Insira 'logData' na coleção 'logData'
+                const logResult = await db.collection('logData').save(logData);
+            }
+
+            // Passo 4: Atualizar os detalhes do especialista na coleção principal
+            const updateQuery = `
+                FOR doc IN ${collectionName}
+                FILTER doc._key == @key
+                UPDATE doc WITH @updatedData IN ${collectionName} OPTIONS { keepNull: false }
+                RETURN NEW
+            `;
+
+            const updateResult = await db.query(updateQuery, { key, updatedData });
+
+            if (updateResult) {
+                res.status(200).json({ message: 'Especialista atualizado com sucesso' });
+            } else {
+                res.status(404).json({ error: 'Especialista não encontrado' });
+            }
         } else {
             res.status(404).json({ error: 'Especialista não encontrado' });
         }
@@ -186,7 +226,6 @@ router.put('/:key', verifyAvancadoAuth, async (req, res) => {
         res.status(500).json({ error: 'Erro ao editar especialista' });
     }
 });
-
 // Rota para buscar médicos ao vivo
 router.get('/livesearch', async (req, res) => {
     try {
