@@ -1,44 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AsyncSelect from 'react-select/async';
 import Select from 'react-select';
 import api from "../services/api";
 import * as bootstrap from 'bootstrap';
 import '../css/ModalAgendamento.css';
 
-const ModalAgendamento = () => {
+const ModalAgendamento = ({ events, setEvents }) => {
   const [activeButton, setActiveButton] = useState(null);
   const [selectedEspecialista, setSelectedEspecialista] = useState(null);
   const [selectedPaciente, setSelectedPaciente] = useState(null);
   const [especialistaInputValue, setEspecialistaInputValue] = useState('');
   const [pacienteInputValue, setPacienteInputValue] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
-  const [options, setOptions] = useState([]);
-  const [selectedService, setSelectedService] = useState(null);
+  const [especialidadeOptions, setEspecialidadeOptions] = useState([]);
+  const [servicoOptions, setServicoOptions] = useState([]);
+  const [selectedEspecialidade, setSelectedEspecialidade] = useState(null);
+  const [especialidadeValue, setEspecialidadeValue] = useState(null);
+  const [selectedServico, setSelectedServico] = useState(null);
+  const [servicoValue, setServicoValue] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+
 
   const timeOptions = [];
   const Noop = () => null;
 
 
-  for(let i=0; i<24; i++) {
-    for(let j=0; j<60; j+=30) {
+  for (let i = 0; i < 24; i++) {
+    for (let j = 0; j < 60; j += 30) {
       let startHour = i.toString().padStart(2, '0');
       let startMinute = j.toString().padStart(2, '0');
-      let endHour = (j === 30 ? (i+1) : i).toString().padStart(2, '0');
+      let endHour = (j === 30 ? (i + 1) : i).toString().padStart(2, '0');
       let endMinute = (j === 30 ? '00' : '30');
       timeOptions.push({ value: `${startHour}:${startMinute}-${endHour}:${endMinute}`, label: `${startHour}:${startMinute} - ${endHour}:${endMinute}` });
     }
   }
 
-  const loadOptions = () => {
+  const loadTipoDeEspecialistaOptions = () => {
     api.get('/especialidade/all')
       .then(response => {
-        const newOptions = response.data.map(service => ({ value: service._id, label: service.name }));
-        setOptions(newOptions);
+        const newOptions = response.data.map(service => ({ value: service._id, label: service.nome, servicos: service.servicos }));
+        setEspecialidadeOptions(newOptions);
       });
   };
-  
-  
+
+  const loadServicoOptions = () => {
+    if (selectedEspecialidade && selectedEspecialidade.servicos) {
+      const newOptions = selectedEspecialidade.servicos.map((servico) => ({
+        value: servico,
+        label: servico,
+      }));
+      setServicoOptions(newOptions);
+    } else {
+      setServicoOptions([]);
+    }
+  };
+
+  useEffect(() => {
+    setSelectedServico(null);
+  }, [selectedEspecialidade]);
+
 
   const handleButtonClick = (button) => {
     if (activeButton === button) {
@@ -50,10 +70,10 @@ const ModalAgendamento = () => {
 
   const loadEspecialistaOptions = async (inputValue) => {
     try {
-      const response = await api.get('/doctors/livesearch', { params: { q: inputValue } }); 
+      const response = await api.get('/doctors/livesearch', { params: { q: inputValue } });
       const data = response.data.map(item => ({
         value: item._id,
-        label: item.Nome
+        label: item.nome
       }));
       return data;
     } catch (error) {
@@ -64,10 +84,10 @@ const ModalAgendamento = () => {
 
   const loadPacienteOptions = async (inputValue) => {
     try {
-      const response = await api.get('/patients/livesearch', { params: { q: inputValue } }); 
+      const response = await api.get('/patients/livesearch', { params: { q: inputValue } });
       const data = response.data.map(item => ({
         value: item._id,
-        label: item.Nome
+        label: item.nome
       }));
       return data;
     } catch (error) {
@@ -76,11 +96,27 @@ const ModalAgendamento = () => {
     }
   };
 
-  const handleServiceChange = (selectedOption) => {
-    setSelectedService(selectedOption);
-    console.log('Serviço selecionado:', selectedOption);
+  const handleEspecialidadeChange = (selectedOption) => {
+    if (selectedOption.value === 'clear') {
+      setEspecialidadeValue(null);
+      setSelectedEspecialidade(null);
+    } else {
+      setEspecialidadeValue(selectedOption);
+      setSelectedEspecialidade(selectedOption);
+    }
   };
-  
+
+
+  const handleServicoChange = (selectedOption) => {
+    if (selectedOption.value === 'clear') {
+      setServicoValue(null);
+      setSelectedServico(null);
+    } else {
+      setServicoValue(selectedOption);
+      setSelectedServico(selectedOption);
+    }
+  };
+
   const handleTimeChange = (selectedOption) => {
     setSelectedTime(selectedOption);
   };
@@ -120,16 +156,15 @@ const ModalAgendamento = () => {
     if (selectedEspecialista && selectedPaciente && selectedDate && activeButton) {
       const data = {
         ambulatorio: activeButton === 'left' ? 'Geral' : 'LGBT',
-        typeId: selectedService ? selectedService.value : '',
-        type: selectedService ? selectedService.label : '',
-        doctorKey: selectedEspecialista.value.split('/')[1], // Remove o 'Person/' do doctorKey
-        patientKey: selectedPaciente.value.split('/')[1], // Remove o 'Person/' do patientKey
-        date: selectedDate,
-        startDateTime: selectedTime ? selectedTime.value.split('-')[0] : '',
-        endDateTime: selectedTime ? selectedTime.value.split('-')[1] : '',
+        especialidade: selectedEspecialidade ? selectedEspecialidade.label : '',
+        tipo: selectedServico ? selectedServico.label : '',
+        keyEspecialista: selectedEspecialista.value.split('/')[1], // Remove o 'Person/' do doctorKey
+        keyPaciente: selectedPaciente.value.split('/')[1], // Remove o 'Person/' do patientKey
+        data: selectedDate,
+        horaInicio: selectedTime ? selectedTime.value.split('-')[0] : '',
+        horaFim: selectedTime ? selectedTime.value.split('-')[1] : '',
       };
       try {
-        console.log(data)
         const response = await api.post('/agendar/add', data);
         console.log('Dados enviados com sucesso:', response.data);
         var myModalEl = document.getElementById('exampleModal')
@@ -142,25 +177,25 @@ const ModalAgendamento = () => {
         if (backdrop) {
           backdrop.parentNode.removeChild(backdrop);
         }
-
-        // Limpe os campos do formulário e desmarque os botões
         setActiveButton(null);
         setSelectedEspecialista(null);
         setSelectedPaciente(null);
         setEspecialistaInputValue('');
         setPacienteInputValue('');
         setSelectedDate('');
-    
-        // Aqui você pode fazer alguma ação após o envio dos dados, como fechar o modal ou mostrar uma mensagem de confirmação
+        setSelectedEspecialidade(null);
+        setSelectedServico(null);
+        setSelectedTime(null);
+
+        setEvents(prevEvents => [...prevEvents, response.data]);
       } catch (error) {
         console.error('Erro ao enviar os dados:', error);
-        // Aqui você pode mostrar uma mensagem de erro para o usuário
       }
     } else {
       alert('Por favor, preencha todos os campos e selecione um tipo de agendamento.');
     }
   };
-  
+
 
   return (
     <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -190,40 +225,81 @@ const ModalAgendamento = () => {
               </button>
             </div>
             <form>
-            <AsyncSelect
-  defaultOptions={options}
-  onMenuOpen={loadOptions}
-  isSearchable={false}
-  onChange={handleServiceChange}
-/>
-
-              <div className='PEspaçamento'>
-              <label htmlFor="dateInput" className="form-label">Especialista</label>
-              <div className={`input-container ${selectedEspecialista ? 'flex-container' : ''}`}>
-                <div>
+              <div>
+                <label htmlFor="dateInput" className="form-label">Tipo de agendamento</label>
+                <div className='input-container input-sel'>
                   <AsyncSelect
-                    placeholder="Especialista"
-                    cacheOptions
-                    loadOptions={loadEspecialistaOptions}
-                    onInputChange={handleEspecialistaInputChange}
-                    onChange={handleEspecialistaChange}
-                    value={selectedEspecialista}
-                    isDisabled={selectedEspecialista !== null}
-                    components={{ DropdownIndicator: Noop, indicatorSeparator: Noop }}
+                    value={especialidadeValue}
+                    defaultOptions={[{ value: 'clear', label: '' }, ...especialidadeOptions]}
+                    onMenuOpen={loadTipoDeEspecialistaOptions}
+                    isSearchable={false}
+                    onChange={handleEspecialidadeChange}
+                    styles={{
+                      option: (provided) => ({
+                        ...provided,
+                        minHeight: '40px',
+                      }),
+                    }}
                   />
                 </div>
-                <div>
-                  {selectedEspecialista && (
-                    <button onClick={handleEspecialistaClear} className="clear-button">
-                      <i className="bi bi-x-lg"></i>
-                    </button>
-                  )}
+                {selectedEspecialidade && selectedEspecialidade.servicos && (
+                  <>
+                    <label htmlFor="dateInput" className="form-label">Serviço</label>
+                    <div className='input-container input-sel'>
+                      <AsyncSelect
+                        value={servicoValue}
+                        defaultOptions={[{ value: 'clear', label: '' }, ...selectedEspecialidade.servicos.map(servico => ({ label: servico, value: servico }))]}
+                        onMenuOpen={loadServicoOptions}
+                        isSearchable={false}
+                        onChange={handleServicoChange}
+                        styles={{
+                          option: (provided) => ({
+                            ...provided,
+                            minHeight: '40px',
+                          }),
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+                {selectedEspecialidade && (
+                  <>
+                    <label className="form-label">Especialista</label>
+                    <div className={`input-container ${selectedEspecialista ? 'flex-container' : ''}`}>
+                      <AsyncSelect
+                        placeholder="Especialista"
+                        cacheOptions
+                        loadOptions={loadEspecialistaOptions}
+                        onInputChange={handleEspecialistaInputChange}
+                        onChange={handleEspecialistaChange}
+                        value={selectedEspecialista}
+                        isDisabled={selectedEspecialista !== null}
+                        components={{ DropdownIndicator: Noop, indicatorSeparator: Noop }}
+                      />
+                      <div>
+                        {selectedEspecialista && (
+                          <button onClick={handleEspecialistaClear} className="clear-button">
+                            <i className="bi bi-x-lg"></i>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className='w-100 d-flex'>
+                <div id='data' className='w-50'>
+                  <label htmlFor="dateInput" className="form-label">Data</label>
+                  <div className="input-container">
+                    <input id='dateInput' type="date" className="form-control" id="dateInput" value={selectedDate} onChange={handleDateChange} />
+                  </div>
                 </div>
-              </div>
-              </div>
-              <div className="mb-3">
-                <label htmlFor="dateInput" className="form-label">Data</label>
-                <input type="date" className="form-control" id="dateInput" value={selectedDate} onChange={handleDateChange} />
+                <div id='hora' className='w-50'>
+                  <label htmlFor="dateInput" className="form-label">Hora</label>
+                  <div className='input-container input-hora'>
+                    <Select options={timeOptions} onChange={handleTimeChange} />
+                  </div>
+                </div>
               </div>
               <label htmlFor="dateInput" className="form-label">Paciente</label>
               <div className={`input-container ${selectedPaciente ? 'flex-container' : ''}`}>
@@ -240,14 +316,12 @@ const ModalAgendamento = () => {
                   />
                 </div>
                 <div>
-                {selectedPaciente && (
-                <button onClick={handlePacienteClear} className="clear-button">
-                  <i className="bi bi-x-lg"></i>
-                </button>
+                  {selectedPaciente && (
+                    <button onClick={handlePacienteClear} className="clear-button">
+                      <i className="bi bi-x-lg"></i>
+                    </button>
                   )}
                 </div>
-                <Select options={timeOptions} onChange={handleTimeChange}/>
-
               </div>
             </form>
           </div>

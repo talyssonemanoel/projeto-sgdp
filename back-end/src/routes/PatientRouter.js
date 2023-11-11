@@ -154,7 +154,7 @@ router.get('/livesearch', async (req, res) => {
         // Aqui estamos usando uma consulta AQL para buscar no ArangoDB
         const cursor = await db.query(aql`
             FOR doc IN Person
-            FILTER CONTAINS(LOWER(doc.Nome), LOWER(${query}))
+            FILTER CONTAINS(LOWER(doc.nome), LOWER(${query}))
             RETURN doc
         `);
 

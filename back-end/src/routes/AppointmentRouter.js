@@ -24,36 +24,37 @@ const collectionName = 'Service';
 // Rota para agendar consultas
 router.post('/add', async (req, res) => {
     try {
-        const { ambulatorio, typeId, type, doctorKey, patientKey, date, startDateTime, endDateTime } = req.body;
+        const { ambulatorio, especialidade, tipo, keyEspecialista, keyPaciente, data, horaInicio, horaFim } = req.body;
 
         // Verifica se os campos obrigatórios foram fornecidos
-        if (!ambulatorio || !typeId || !type || !doctorKey || !patientKey || !date || !startDateTime || !endDateTime) {
+        if (!ambulatorio || !especialidade || !tipo || !keyEspecialista || !keyPaciente || !data || !horaInicio || !horaFim) {
             return res.status(400).json({ error: 'Todos os campos são obrigatórios para agendar uma consulta.' });
         }
 
 
         // Busca o _id do médico (somente se for um médico real) e do paciente pelo CPF
-        const doctorId = await getIdForRealDoctorByKey('Person', doctorKey);
-        if (!doctorId) {
+        const idEspecialista = await getIdForRealDoctorByKey('Employees', keyEspecialista);
+        if (!idEspecialista) {
             return res.status(400).json({ error: 'Erro ao encontrar doutor pelo ID informado' });
         }
+        
+        const paciente = await getPersonByKey('Person', keyPaciente);
+        if (!paciente) {
+            return res.status(400).json({ error: 'Erro ao encontrar paciente pelo ID informado' });
+        }
+        const idPaciente = paciente._id
+        const nomePaciente = paciente.nome
 
-        const patient = await getPersonByKey('Person', patientKey);
-        if (!patient) {
-            return res.status(400).json({ error: 'Erro ao encontrar paciente' });
+        if (!idPaciente) {
+            return res.status(400).json({ error: 'ID de paciente inválido ou não encontrado.' });
         }
 
-        const patientId = patient._id
-        const patientName = patient.name
-
-        if (!patientId) {
-            return res.status(400).json({ error: 'CPF de paciente inválido ou não encontrado.' });
-        }
-
-        // Estabele uma relaçãod e aresta entre paciente e doutor
-        const _from = patientId;
-        const _to = doctorId;
-        const status = agendado;
+        // Estabele uma relação de aresta entre paciente e doutor
+        const _from = idPaciente
+        const _to = idEspecialista
+        const status = "agendado"
+        const info = ""
+        const infoPrivado = ""
 
         // Busca o _id da especialidade pelo nome
         
@@ -62,14 +63,16 @@ router.post('/add', async (req, res) => {
             _from,
             _to,
             ambulatorio,
-            typeId,
-            type,
-            doctorId,
-            patientId,
-            patientName,
-            date,
-            startDateTime,
-            endDateTime,
+            especialidade,
+            tipo,
+            keyEspecialista,
+            keyPaciente,
+            nomePaciente,
+            data,
+            horaInicio,
+            horaFim,
+            info,
+            infoPrivado,
             status
         };
 
@@ -86,7 +89,7 @@ router.get('/all', verifySimplesAuth, async (req, res) => {
     try {
         const query = aql`
             FOR appointment IN Service
-            FILTER appointment.status == 'ativo'
+            FILTER appointment.status == 'agendado'
             RETURN appointment
         `;
 
@@ -112,7 +115,7 @@ router.get('/search', verifySimplesAuth, async (req, res) => {
 
         // Cria uma variável para armazenar o filtro da consulta
         let filter = '';
-        let filter2 = 'appointment.status == "ativo"';
+        let filter2 = 'appointment.status == "agendado"';
 
         if (name) {
             const patientId = await getIdByNameOrCpf('Person', name);
@@ -172,9 +175,9 @@ router.put('/cancel/:appointmentId', verifySimplesAuth, async (req, res) => {
             return res.status(400).json({ error: 'ID de agendamento inválido.' });
         }
 
-        // Atualiza o status do agendamento para "inativo"
+        // Atualiza o status do agendamento para "cancelado"
         const query = aql`
-            UPDATE ${appointmentId} WITH { status: 'inativo' } IN Service
+            UPDATE ${appointmentId} WITH { status: 'cancelado' } IN Service
             RETURN NEW
         `;
 
@@ -193,10 +196,10 @@ router.put('/cancel/:appointmentId', verifySimplesAuth, async (req, res) => {
 });
 
 // Rota para buscar todos os documentos da coleção Service por doctorId
-router.get('/GetServicesByDoctorKey', async (req, res) => {
+router.get('/GetServicesBySpecialistKey', async (req, res) => {
     try {
         // Obter o valor do parâmetro doctorId da consulta
-        const doctorKey = `Person/${req.query.doctorKey}`;
+        const doctorKey = req.query.doctorKey
 
         // Verifique se o parâmetro doctorId foi fornecido na consulta
         if (!doctorKey) {
@@ -206,7 +209,7 @@ router.get('/GetServicesByDoctorKey', async (req, res) => {
         // Construa uma consulta AQL para buscar documentos na coleção Service com o doctorId correspondente
         const query = aql`
             FOR service IN Service
-            FILTER service.doctorId == ${doctorKey}
+            FILTER service.keyEspecialista == ${doctorKey}
             RETURN service
         `;
 

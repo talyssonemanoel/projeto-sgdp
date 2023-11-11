@@ -24,7 +24,6 @@ const AgendamentoAgendar = () => {
   useEffect(() => {
     // Carrega as opções iniciais
     loadOptions("");
-    console.log()
   }, []);
 
   const fullCalendarRef = React.useRef();
@@ -39,7 +38,7 @@ const AgendamentoAgendar = () => {
     if (inputValue) {
       try {
         const response = await api.get('/doctors/livesearch', { params: { q: inputValue } });
-        const doctorOptions = response.data.map(doctor => ({ value: doctor._key, label: doctor.Nome }));
+        const doctorOptions = response.data.map(doctor => ({ value: doctor._key, label: doctor.nome }));
         setOptions(doctorOptions);
       } catch (error) {
         console.error('Erro ao buscar médicos:', error);
@@ -61,14 +60,15 @@ const AgendamentoAgendar = () => {
       setSelectedDoctors((prevDoctors) => [...prevDoctors, doctorWithColor]);
   
       // Busca os agendamentos do médico selecionado
-      const response = await api.get('/agendar/GetServicesByDoctorKey', { params: { doctorKey: selectedDoctor.value } });
+      const response = await api.get('/agendar/GetServicesBySpecialistKey', { params: { doctorKey: selectedDoctor.value } });
+      console.log(selectedDoctor.value )
       const doctorAppointments = response.data.map(appointment => {
         // Combina a data e a hora em uma string ISO 8601
-        const start = `${appointment.date}T${appointment.startDateTime}:00`;
-        const end = `${appointment.date}T${appointment.endDateTime}:00`;
+        const start = `${appointment.data}T${appointment.horaInicio}:00`;
+        const end = `${appointment.data}T${appointment.horaFim}:00`;
       
         return {
-          title: appointment.patientName,
+          title: appointment.nomePaciente,
           start: start,
           end: end,
           doctorKey: selectedDoctor.value,
@@ -128,7 +128,7 @@ const AgendamentoAgendar = () => {
 
   return (
     <div className="calendar-container">
-      <ModalAgendamento />
+      <ModalAgendamento events={events} setEvents={setEvents} />
       <style>
         {`
           .main-content {
@@ -203,7 +203,7 @@ const AgendamentoAgendar = () => {
         </ul>
       </div>
       <div className="agenda">
-        <FullCalendar
+        <FullCalendar key={events} events={events}
           ref={fullCalendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
           initialView="timeGridWeek"

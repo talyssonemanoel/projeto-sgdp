@@ -241,9 +241,8 @@ router.get('/livesearch', async (req, res) => {
         // Aqui estamos usando uma consulta AQL para buscar no ArangoDB
         const cursor = await db.query(aql`
             FOR doc IN Employees
-            FILTER CONTAINS(LOWER(doc.Nome), LOWER(${query})) && OcupacaoAmbulatorio == "especialista"
+            FILTER CONTAINS(LOWER(doc.nome), LOWER(${query})) && doc.ocupacaoAmbulatorio == "Especialista"
             RETURN doc
-            
         `);
 
         // Converter o cursor em um array de resultados
@@ -252,8 +251,8 @@ router.get('/livesearch', async (req, res) => {
         // Enviar os resultados para o cliente
         res.json(results);
     } catch (error) {
-        console.error('Erro ao buscar médicos:', error);
-        res.status(500).json({ error: 'Erro ao buscar médicos' });
+        console.error('Erro ao buscar médicos1:', error);
+        res.status(500).json({ error: 'Erro ao buscar médicos2' });
     }
 });
 

@@ -15,6 +15,14 @@
   display: flex;
 }
 
+.input-sel {
+  width: 50%;
+}
+
+.input-hora {
+  width: 180px!important;
+}
+
 #dateInput{
     width: 140px;
 }

@@ -40,6 +40,7 @@ const Prontuario = () => {
         orientacaoSexual: item.orientacaoSexual,
         identidadeDeGenero: item.identidadeDeGenero,
         ubsCadastrada: item.ubsCadastrada,
+        
         acompanhamentoDeSaude: item.acompanhamentoDeSaude,
         observacoes: item.observacoes
       }));
@@ -128,7 +129,7 @@ const Prontuario = () => {
                         <ProntuarioLinhaDoTempo atendimentos={filteredAtendimentos} currentPage={currentPage} setCurrentPage={setCurrentPage} />
                       </div>
                     </div>
-                  ) : (activeButton === 'Geral' ? (
+                  ) : (
                     <div className="dados-gerais-do-paciente h-100">
                       <div className='w-100 text-center'>
                         <div>
@@ -157,6 +158,14 @@ const Prontuario = () => {
                       </div>
                       <div className='d-flex'>
                         <div className='col-6'>
+                          <h6>Orientação sexual: {selectedPaciente.orientacaoSexual}</h6>
+                        </div>
+                        <div className='col-6'>
+                          <h6>Identidade de gênero: {selectedPaciente.identidadeDeGenero}</h6>
+                        </div>
+                      </div>
+                      <div className='d-flex'>
+                        <div className='col-6'>
                           <h6>Etnia: {selectedPaciente.etnia}</h6>
                         </div>
                         <div className='col-6'>
@@ -171,6 +180,7 @@ const Prontuario = () => {
                           <h6>Ocupação: {selectedPaciente.ocupacao}</h6>
                         </div>
                       </div>
+                      <h6>UBS REF: {selectedPaciente.ubsCadastrada}</h6>
                       <h6>Nome da mãe: {selectedPaciente.nomeDaMae}</h6>
                       <div className='w-100 text-center'>
                         <div className='divisor-subtitle'>
@@ -212,91 +222,7 @@ const Prontuario = () => {
                       <h6>Em caso de emergência: {selectedPaciente.contatoEmergencia}</h6>
                     </div>
                     
-                    ) : (
-
-                    <div className="dados-gerais-do-paciente h-100">
-                      <div className='w-100 text-center'>
-                        <div>
-                          <h3>ACOLHIMENTO INTERPROFISSIONAL</h3>
-                        </div>
-                        <div className='divisor-subtitle'>
-                          <h5>PRONTUÁRIO INDIVIDUAL</h5>
-                        </div>
-                      </div>
-                      <div className='d-flex'>
-                        <div className='col-6'>
-                          <h6>Nome: {selectedPaciente.label}</h6>
-                        </div>
-                        <div className='col-6'>
-                          <h6>Idade: {age} anos</h6>
-                        </div>
-                      </div>
-                      <div className='d-flex'>
-                        <div className='col-6'>
-                          <h6>RG: {selectedPaciente.rg}</h6>
-                        </div>
-                        <div className='col-6'>
-                          <h6>CPF: {selectedPaciente.cpf}</h6>
-                        </div>
-                      </div>
-                      <div className='d-flex'>
-                        <div className='col-6'>
-                          <h6>Etnia: {selectedPaciente.etnia}</h6>
-                        </div>
-                        <div className='col-6'>
-                          <h6>Escolaridade: {selectedPaciente.escolaridade}</h6>
-                        </div>
-                      </div>
-                      <div className='d-flex'>
-                        <div className='col-6'>
-                          <h6>Estado civil: {selectedPaciente.estadoCivil}</h6>
-                        </div>
-                        <div className='col-6'>
-                          <h6>Ocupação: {selectedPaciente.ocupacao}</h6>
-                        </div>
-                      </div>
-                      <h6>Nome da mãe: {selectedPaciente.nomeDaMae}</h6>
-                      <div className='w-100 text-center'>
-                        <div className='divisor-subtitle'>
-                          <h5>ENDEREÇO</h5>
-                        </div>
-                      </div>
-                      <h6>Logradouro: {selectedPaciente.logradouro}</h6>
-                      <div className='d-flex'>
-                        <div className='col-6'>
-                          <h6>Número: {selectedPaciente.numeroEndereco}</h6>
-                        </div>
-                        <div className='col-6'>
-                          <h6>Bairro: {selectedPaciente.bairro}</h6>
-                        </div>
-                      </div>
-                      <h6>Complemento: {selectedPaciente.complementoEndereco}</h6>
-                      <div className='d-flex'>
-                        <div className='col-6'>
-                          <h6>Cidade: {selectedPaciente.cidade}</h6>
-                        </div>
-                        <div className='col-6'>
-                          <h6>Estado: {selectedPaciente.estado}</h6>
-                        </div>
-                      </div>
-                      <div className='w-100 text-center'>
-                        <div className='divisor-subtitle'>
-                          <h5>CONTATO</h5>
-                        </div>
-                      </div>
-                      <h6>Email: {selectedPaciente.email}</h6>
-                      <div className='d-flex'>
-                        <div className='col-6'>
-                          <h6>Telefone: {selectedPaciente.telefone}</h6>
-                        </div>
-                        <div className='col-6'>
-                          <h6>Whatsapp: {selectedPaciente.whatsapp}</h6>
-                        </div>
-                      </div>
-                      <h6>Em caso de emergência: {selectedPaciente.contatoEmergencia}</h6>
-                    </div>
-                  )
-                  )}
+                    )}
                 </div>
               </div>
             </div>

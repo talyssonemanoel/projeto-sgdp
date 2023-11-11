@@ -86,7 +86,7 @@ async function getIdForRealDoctorByKey(collection, _key) {
     try {
         const query = aql`
         FOR doc IN ${db.collection(collection)}
-          FILTER doc._key == ${_key} && HAS(doc, "specialtyId")
+          FILTER doc._key == ${_key} && doc.ocupacaoAmbulatorio == "Especialista"
           RETURN doc._id
       `;
         const cursor = await db.query(query);
