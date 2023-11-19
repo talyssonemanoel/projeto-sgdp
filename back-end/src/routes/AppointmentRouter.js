@@ -39,6 +39,9 @@ router.post('/add', async (req, res) => {
         }
         
         const paciente = await getPersonByKey('Person', keyPaciente);
+        const especialista = await getPersonByKey('Employees', keyEspecialista);
+
+
         if (!paciente) {
             return res.status(400).json({ error: 'Erro ao encontrar paciente pelo ID informado' });
         }
@@ -52,6 +55,7 @@ router.post('/add', async (req, res) => {
         // Estabele uma relação de aresta entre paciente e doutor
         const _from = idPaciente
         const _to = idEspecialista
+        const nomeEspecailista = especialista.nome
         const status = "agendado"
         const info = ""
         const infoPrivado = ""
@@ -67,6 +71,7 @@ router.post('/add', async (req, res) => {
             tipo,
             keyEspecialista,
             keyPaciente,
+            nomeEspecailista,
             nomePaciente,
             data,
             horaInicio,
@@ -166,18 +171,20 @@ router.get('/search', verifySimplesAuth, async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar agendamentos' });
     }
 });
-router.put('/cancel/:appointmentId', verifySimplesAuth, async (req, res) => {
+
+
+router.put('/cancel/:serviceKey', /*verifySimplesAuth,*/ async (req, res) => {
     try {
-        const { appointmentId } = req.params;
+        const { serviceKey } = req.params;
 
         // Verifica se o ID do agendamento é válido
-        if (!appointmentId) {
+        if (!serviceKey) {
             return res.status(400).json({ error: 'ID de agendamento inválido.' });
         }
 
         // Atualiza o status do agendamento para "cancelado"
         const query = aql`
-            UPDATE ${appointmentId} WITH { status: 'cancelado' } IN Service
+            UPDATE ${serviceKey} WITH { status: 'cancelado' } IN Service
             RETURN NEW
         `;
 
@@ -195,34 +202,100 @@ router.put('/cancel/:appointmentId', verifySimplesAuth, async (req, res) => {
     }
 });
 
+
+router.put('/reagendar/:serviceKey', /*verifySimplesAuth,*/ async (req, res) => {
+    try {
+        const { serviceKey } = req.params;
+        const { data, horaInicio, horaFim } = req.body;
+
+        // Verifica se o ID do agendamento é válido
+        if (!serviceKey) {
+            return res.status(400).json({ error: 'ID de agendamento inválido.' });
+        }
+
+        // Atualiza o status do agendamento para "cancelado"
+        const query = aql`
+        UPDATE ${serviceKey}
+        WITH { 
+          data: ${data},
+          horaInicio: ${horaInicio}, 
+          horaFim: ${horaFim}
+        }
+        IN Service
+        RETURN NEW
+      `;
+
+        const cursor = await db.query(query);
+        const updatedAppointment = await cursor.next();
+
+        if (!updatedAppointment) {
+            return res.status(404).json({ error: 'Agendamento não encontrado.' });
+        }
+
+        res.json({ message: 'Agendamento cancelado com sucesso', appointment: updatedAppointment });
+    } catch (error) {
+        console.error('Erro ao cancelar agendamento:', error);
+        res.status(500).json({ error: 'Erro ao cancelar agendamento' });
+    }
+});
+
+
+
+
 // Rota para buscar todos os documentos da coleção Service por doctorId
 router.get('/GetServicesBySpecialistKey', async (req, res) => {
     try {
-        // Obter o valor do parâmetro doctorId da consulta
-        const doctorKey = req.query.doctorKey
+        const keyEspecialista = req.query.keyEspecialista;
+        const status = req.query.status;
+        const date = req.query.date; // Novo parâmetro para a data
 
-        // Verifique se o parâmetro doctorId foi fornecido na consulta
-        if (!doctorKey) {
+
+        if (!keyEspecialista) {
             return res.status(400).json({ error: 'O parâmetro doctorId é obrigatório.' });
         }
 
-        // Construa uma consulta AQL para buscar documentos na coleção Service com o doctorId correspondente
-        const query = aql`
-            FOR service IN Service
-            FILTER service.keyEspecialista == ${doctorKey}
-            RETURN service
-        `;
+        // Calcular o mês anterior e o próximo mês
+        let year = parseInt(date.split('-')[0]);
+        let month = parseInt(date.split('-')[1]) - 1; // Subtrair 1 para ajustar para a base zero
+        let dateObj = new Date(year, month);
 
-        // Execute a consulta no banco de dados
+        let prevMonthObj = new Date(dateObj.getFullYear(), dateObj.getMonth() - 1);
+        let prevMonth = `${prevMonthObj.getFullYear()}-${(prevMonthObj.getMonth() + 1).toString().padStart(2, '0')}`;
+
+        let nextMonthObj = new Date(dateObj.getFullYear(), dateObj.getMonth() + 1);
+        let nextMonth = `${nextMonthObj.getFullYear()}-${(nextMonthObj.getMonth() + 1).toString().padStart(2, '0')}`;
+    
+        let query;
+
+        if (status === "agendado || finalizado") {
+            query = aql`
+                FOR service IN Service
+                FILTER service.keyEspecialista == ${keyEspecialista} 
+                && (service.status IN ["agendado", "finalizado"])
+                && (CONCAT(SUBSTRING(service.data, 0, 4), "-", SUBSTRING(service.data, 5, 2)) IN [${prevMonth}, ${date}, ${nextMonth}]) // Filtro pela data
+                RETURN service
+            `;
+        } else {
+            query = aql`
+                FOR service IN Service
+                FILTER service.keyEspecialista == ${keyEspecialista} 
+                && service.status == ${status}
+                && (CONCAT(SUBSTRING(service.data, 0, 4), "-", SUBSTRING(service.data, 5, 2)) IN [${prevMonth}, ${date}, ${nextMonth}]) // Filtro pela data
+                RETURN service
+            `;
+        }
+
         const cursor = await db.query(query);
         const services = await cursor.all();
-        // Envie os documentos encontrados como resposta
+
         res.json(services);
     } catch (error) {
         console.error('Erro ao buscar serviços por doctorId:', error);
         res.status(500).json({ error: 'Erro ao buscar serviços por doctorId' });
     }
 });
+
+
 
 router.get('/GetServicesByPatientKey', async (req, res) => {
     try {

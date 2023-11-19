@@ -65,7 +65,7 @@ const Layout = () => {
               <ul className="nav-links">
               {(isMedio || isAdmin) && (
                   <li>
-                    <Link to="agendar">Agendamento</Link>
+                    <Link to="agenda">Agenda</Link>
                   </li>
                 )}
                 <li>

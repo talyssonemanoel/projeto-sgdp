@@ -113,6 +113,21 @@ async function getPersonByKey(collection, _key) {
     }
 }
 
+async function getSpecialistByKey(collection, _key) {
+    try {
+        const query = aql`
+        FOR doc IN ${db.collection(collection)}
+          FILTER doc._key == ${_key}
+          RETURN doc
+      `;
+        const cursor = await db.query(query);
+        const result = await cursor.next();
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
 // Adicione este método à sua lógica existente para buscar o _id da especialidade pelo nome
 async function getSpecialtyIdByName(specialtyName) {
     try {

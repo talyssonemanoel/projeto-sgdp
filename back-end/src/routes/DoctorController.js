@@ -256,6 +256,42 @@ router.get('/livesearch', async (req, res) => {
     }
 });
 
+router.get('/livesearchspecialty', async (req, res) => {
+    try {
+        // Obter a consulta de busca do parâmetro de consulta 'q'
+        const query = req.query.q;
+        const query2 = req.query.specialty;
+
+        console.log(query2)
+
+        // Se a consulta de busca não foi fornecida, retornar um erro
+        if (!query) {
+            return res.status(400).json({ error: 'A consulta de busca é obrigatória.' });
+        }
+
+        if (!query2) {
+            return res.status(400).json({ error: 'A consulta de busca é obrigatória.' });
+        }
+
+        // Buscar no banco de dados os médicos cujos nomes correspondem à consulta de busca
+        // Aqui estamos usando uma consulta AQL para buscar no ArangoDB
+        const cursor = await db.query(aql`
+            FOR doc IN Employees
+            FILTER CONTAINS(LOWER(doc.nome), LOWER(${query})) && doc.ocupacaoAmbulatorio == "Especialista" && doc.nomeEspecialidade == ${query2}
+            RETURN doc
+        `);
+
+        // Converter o cursor em um array de resultados
+        const results = await cursor.all();
+
+        // Enviar os resultados para o cliente
+        res.json(results);
+    } catch (error) {
+        console.error('Erro ao buscar médicos1:', error);
+        res.status(500).json({ error: 'Erro ao buscar médicos2' });
+    }
+});
+
 
 
 module.exports = router;

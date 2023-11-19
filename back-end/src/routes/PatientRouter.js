@@ -24,7 +24,7 @@ const collectionName = 'Person';
 router.post('/add', verifySimplesAuth, async (req, res) => {
     try {
         const {
-            Nome,
+            nome,
             dataDeNascimento,
             cartaoSus,
             rg,

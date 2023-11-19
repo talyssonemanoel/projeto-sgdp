@@ -121,6 +121,26 @@ router.get('/specialists/:specialtyId', verifySimplesAuth, async (req, res) => {
     }
 });
 
+router.get('/SpecialtyByName', async (req, res) => {
+    try {
+        const query = req.query.q;
+        if (!query) {
+            return res.status(400).json({ error: 'A consulta de busca é obrigatória.' });
+        }
+
+        const cursor = await db.query(aql`
+            FOR doc IN Specialties
+            FILTER doc.nome == ${query}
+            RETURN doc
+        `);
+        const results = await cursor.next();
+        res.json(results);
+    } catch (error) {
+        console.error('Erro ao buscar especialidade:', error);
+        res.status(500).json({ error: 'Erro ao buscar especialidade' });
+    }
+});
+
 
 
 

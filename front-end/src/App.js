@@ -55,7 +55,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/acesso" element={authData ? <Layout /> : <Navigate to="/login" replace />}>
         <Route index element={<BoasVindas />} />
-          <Route path="agendar" element={<AgendamentoAgendar />} />
+          <Route path="agenda" element={<AgendamentoAgendar />} />
           <Route path="cancelar-agendamento" element={<AgendamentoCancelar />} />
           <Route path="cadastrar-paciente" element={<PacienteCadastro />} />
           <Route path="buscar-paciente" element={<PacientePesquisa />} />

@@ -20,29 +20,44 @@
     border-radius: 0 0 0 10px;
   }
 
+  #basic-addon1 {
+    min-width: 15px;
+  }
+
   .input-especialista {
     padding-left: 2px;
     padding-right: 2px;
   }
 
+  .modal-subtitle {
+    font-size: large;
+  }
+
   /* Adicione isso ao seu arquivo CSS ou arquivo de estilo */
   .doctor-color-dot {
-    width: 15px;
-    height: 15px;
+    min-width: 15px;
+    min-height: 15px;
     border-radius: 50%;
     display: inline-block; /* Espaço entre a bolinha e o nome */
     flexbox: left; /* Faz o ponto flutuar à esquerda */
   }
 
+  .inputdata-hora {
+    width: 160px!important;
+  }
+
   .list-group-item {
     display: flex;
+    max-width: 100%;
     align-items: center;
+    user-select: none;
   }
   
   .doctor-name {
-    flex-grow: 1;
+    /*flex-grow: 1;*/
     display: flex;
     justify-content: center;
+    align-items: center;
   }
   
   .icone {
@@ -76,6 +91,7 @@
       width: 24px; 
       transition: color 0.3s ease;
       border: none;
+      align-items: center;
   }
   .button-X:hover {
     color: #404040; /* Cor desejada quando o mouse estiver em cima */

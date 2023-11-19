@@ -5,35 +5,38 @@ import api from "../services/api";
 import * as bootstrap from 'bootstrap';
 import '../css/ModalAgendamento.css';
 
-const ModalAgendamento = ({ events, setEvents }) => {
+const ModalAgendamento = ({
+  events,
+  setEvents,
+  selectedDoctors,
+  setSelectedDoctors,
+  handleDoctorChange,
+  selectedTime,
+  setSelectedTime,
+  timeOptions,
+  handleTimeChange,
+  selectedEspecialista,
+  setSelectedEspecialista,
+  especialidadeValue,
+  setEspecialidadeValue,
+  selectedEspecialidade,
+  setSelectedEspecialidade
+}) => {
   const [activeButton, setActiveButton] = useState(null);
-  const [selectedEspecialista, setSelectedEspecialista] = useState(null);
   const [selectedPaciente, setSelectedPaciente] = useState(null);
   const [especialistaInputValue, setEspecialistaInputValue] = useState('');
   const [pacienteInputValue, setPacienteInputValue] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [especialidadeOptions, setEspecialidadeOptions] = useState([]);
   const [servicoOptions, setServicoOptions] = useState([]);
-  const [selectedEspecialidade, setSelectedEspecialidade] = useState(null);
-  const [especialidadeValue, setEspecialidadeValue] = useState(null);
   const [selectedServico, setSelectedServico] = useState(null);
   const [servicoValue, setServicoValue] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedHora, setSelectedHora] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectTimeKey, setSelectTimeKey] = useState(0);
 
 
-  const timeOptions = [];
   const Noop = () => null;
-
-
-  for (let i = 0; i < 24; i++) {
-    for (let j = 0; j < 60; j += 30) {
-      let startHour = i.toString().padStart(2, '0');
-      let startMinute = j.toString().padStart(2, '0');
-      let endHour = (j === 30 ? (i + 1) : i).toString().padStart(2, '0');
-      let endMinute = (j === 30 ? '00' : '30');
-      timeOptions.push({ value: `${startHour}:${startMinute}-${endHour}:${endMinute}`, label: `${startHour}:${startMinute} - ${endHour}:${endMinute}` });
-    }
-  }
 
   const loadTipoDeEspecialistaOptions = () => {
     api.get('/especialidade/all')
@@ -69,10 +72,16 @@ const ModalAgendamento = ({ events, setEvents }) => {
   };
 
   const loadEspecialistaOptions = async (inputValue) => {
+    
     try {
-      const response = await api.get('/doctors/livesearch', { params: { q: inputValue } });
+      const response = await api.get('/doctors/livesearchspecialty', {
+        params: {
+          q: inputValue,
+          specialty: selectedEspecialidade.label // Adicione o parâmetro adicional
+        }
+      });
       const data = response.data.map(item => ({
-        value: item._id,
+        value: item._key,
         label: item.nome
       }));
       return data;
@@ -96,6 +105,21 @@ const ModalAgendamento = ({ events, setEvents }) => {
     }
   };
 
+  const cleanForms = async () => {
+    setActiveButton(null);
+    setSelectedEspecialista(null);
+    setSelectedPaciente(null);
+    setEspecialistaInputValue(null);
+    setPacienteInputValue(null);
+    setSelectedDate('');
+    setSelectedEspecialidade(null);
+    setSelectedServico(null);
+    setSelectedTime(null);
+    setSelectTimeKey(prevKey => prevKey + 1);
+    setEspecialidadeValue(null);
+    setServicoValue(null);
+  }
+
   const handleEspecialidadeChange = (selectedOption) => {
     if (selectedOption.value === 'clear') {
       setEspecialidadeValue(null);
@@ -104,6 +128,8 @@ const ModalAgendamento = ({ events, setEvents }) => {
       setEspecialidadeValue(selectedOption);
       setSelectedEspecialidade(selectedOption);
     }
+    console.log("esp", selectedEspecialidade)
+    console.log("evalue",especialidadeValue)
   };
 
 
@@ -115,10 +141,6 @@ const ModalAgendamento = ({ events, setEvents }) => {
       setServicoValue(selectedOption);
       setSelectedServico(selectedOption);
     }
-  };
-
-  const handleTimeChange = (selectedOption) => {
-    setSelectedTime(selectedOption);
   };
 
   const handleEspecialistaInputChange = (newValue) => {
@@ -153,46 +175,56 @@ const ModalAgendamento = ({ events, setEvents }) => {
   };
 
   const handleSubmit = async () => {
-    if (selectedEspecialista && selectedPaciente && selectedDate && activeButton) {
-      const data = {
-        ambulatorio: activeButton === 'left' ? 'Geral' : 'LGBT',
-        especialidade: selectedEspecialidade ? selectedEspecialidade.label : '',
-        tipo: selectedServico ? selectedServico.label : '',
-        keyEspecialista: selectedEspecialista.value.split('/')[1], // Remove o 'Person/' do doctorKey
-        keyPaciente: selectedPaciente.value.split('/')[1], // Remove o 'Person/' do patientKey
-        data: selectedDate,
-        horaInicio: selectedTime ? selectedTime.value.split('-')[0] : '',
-        horaFim: selectedTime ? selectedTime.value.split('-')[1] : '',
-      };
-      try {
-        const response = await api.post('/agendar/add', data);
-        console.log('Dados enviados com sucesso:', response.data);
-        var myModalEl = document.getElementById('exampleModal')
-        var modal = bootstrap.Modal.getInstance(myModalEl)
-        modal.hide()
-        // Remova a classe 'modal-open' do body
-        document.body.classList.remove('modal-open');
-        // Remova o elemento do backdrop
-        var backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) {
-          backdrop.parentNode.removeChild(backdrop);
-        }
-        setActiveButton(null);
-        setSelectedEspecialista(null);
-        setSelectedPaciente(null);
-        setEspecialistaInputValue('');
-        setPacienteInputValue('');
-        setSelectedDate('');
-        setSelectedEspecialidade(null);
-        setSelectedServico(null);
-        setSelectedTime(null);
-
-        setEvents(prevEvents => [...prevEvents, response.data]);
-      } catch (error) {
-        console.error('Erro ao enviar os dados:', error);
-      }
+    if (isSubmitting) {
+      // Já está em processo de envio, evite ações adicionais
+      return;
     } else {
-      alert('Por favor, preencha todos os campos e selecione um tipo de agendamento.');
+
+      setIsSubmitting(true);
+
+      if (selectedEspecialista && selectedPaciente && selectedDate && activeButton) {
+        const data = {
+          ambulatorio: activeButton === 'left' ? 'Geral' : 'LGBT',
+          especialidade: selectedEspecialidade ? selectedEspecialidade.label : '',
+          tipo: selectedServico ? selectedServico.label : '',
+          keyEspecialista: selectedEspecialista.value, // Remove o 'Person/' do doctorKey
+          keyPaciente: selectedPaciente.value.split('/')[1], // Remove o 'Person/' do patientKey
+          data: selectedDate,
+          horaInicio: selectedTime ? selectedTime.value.split('-')[0] : '',
+          horaFim: selectedTime ? selectedTime.value.split('-')[1] : '',
+        };
+        try {
+          const response = await api.post('/agendar/add', data);
+          console.log(data)
+          console.log('Dados enviados com sucesso:', response.data);
+          var myModalEl = document.getElementById('exampleModal')
+          var modal = bootstrap.Modal.getInstance(myModalEl)
+          modal.hide()
+          // Remova a classe 'modal-open' do body
+          document.body.classList.remove('modal-open');
+          // Remova o elemento do backdrop
+          var backdrop = document.querySelector('.modal-backdrop');
+          if (backdrop) {
+            backdrop.parentNode.removeChild(backdrop);
+          }
+          
+          cleanForms()
+
+          let tempSelectedDoctors = selectedDoctors.map(element => element);
+          setSelectedDoctors([])
+          setEvents([])
+          for (let i = 0; i < tempSelectedDoctors.length; i++) {
+            handleDoctorChange(tempSelectedDoctors[i])
+
+          }
+          setIsSubmitting(false);
+        } catch (error) {
+          console.log(data)
+          console.error('Erro ao enviar os dados:', error);
+        }
+      } else {
+        alert('Por favor, preencha todos os campos e selecione um tipo de agendamento.');
+      }
     }
   };
 
@@ -262,7 +294,7 @@ const ModalAgendamento = ({ events, setEvents }) => {
                     </div>
                   </>
                 )}
-                {selectedEspecialidade && (
+                {(selectedEspecialidade || selectedEspecialista) && (
                   <>
                     <label className="form-label">Especialista</label>
                     <div className={`input-container ${selectedEspecialista ? 'flex-container' : ''}`}>
@@ -291,13 +323,13 @@ const ModalAgendamento = ({ events, setEvents }) => {
                 <div id='data' className='w-50'>
                   <label htmlFor="dateInput" className="form-label">Data</label>
                   <div className="input-container">
-                    <input id='dateInput' type="date" className="form-control" id="dateInput" value={selectedDate} onChange={handleDateChange} />
+                    <input id='dateInput' type="date" className="form-control" value={selectedDate} onChange={handleDateChange} />
                   </div>
                 </div>
                 <div id='hora' className='w-50'>
                   <label htmlFor="dateInput" className="form-label">Hora</label>
                   <div className='input-container input-hora'>
-                    <Select options={timeOptions} onChange={handleTimeChange} />
+                    <Select key={selectTimeKey} options={timeOptions} onChange={handleTimeChange} />
                   </div>
                 </div>
               </div>
@@ -326,9 +358,9 @@ const ModalAgendamento = ({ events, setEvents }) => {
             </form>
           </div>
           <div className="modal-footer">
+            <button type="button" className="btn btn-secondary me-auto" onClick={cleanForms}>Limpar</button>
             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
             <button type="button" className="btn btn-primary" onClick={handleSubmit}>Salvar</button>
-
           </div>
           <style>
             {`
