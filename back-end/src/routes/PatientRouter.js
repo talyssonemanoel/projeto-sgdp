@@ -168,6 +168,39 @@ router.get('/livesearch', async (req, res) => {
         res.status(500).json({ error: 'Erro ao buscar médicos' });
     }
 });
+
+router.get('/livesearch-prontuario', async (req, res) => {
+    try {
+        const query = req.query.q;
+        const ambulatorio = req.query.ambulatorio;
+
+        if (!query || !ambulatorio) {
+            return res.status(400).json({ error: 'A consulta de busca e o ambulatório são obrigatórios.' });
+        }
+
+        const cursor = await db.query(aql`
+            FOR doc IN Person
+            FILTER CONTAINS(LOWER(doc.nome), LOWER(${query}))
+            LET relatedServices = (
+                FOR service IN Service
+                FILTER service.keyPaciente == doc._key && service.ambulatorio == ${ambulatorio}
+                RETURN service
+            )
+            FILTER LENGTH(relatedServices) > 0
+            RETURN doc
+        `);
+
+        const results = await cursor.all();
+
+        res.json(results);
+    } catch (error) {
+        console.error('Erro ao buscar médicos:', error);
+        res.status(500).json({ error: 'Erro ao buscar médicos' });
+    }
+});
+
+
+
 router.put('/update/:id', verifySimplesAuth, async (req, res) => {
     try {
         const patientId = req.params.id;

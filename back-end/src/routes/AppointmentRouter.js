@@ -55,7 +55,7 @@ router.post('/add', async (req, res) => {
         // Estabele uma relação de aresta entre paciente e doutor
         const _from = idPaciente
         const _to = idEspecialista
-        const nomeEspecailista = especialista.nome
+        const nomeEspecialista = especialista.nome
         const status = "agendado"
         const info = ""
         const infoPrivado = ""
@@ -71,7 +71,7 @@ router.post('/add', async (req, res) => {
             tipo,
             keyEspecialista,
             keyPaciente,
-            nomeEspecailista,
+            nomeEspecialista,
             nomePaciente,
             data,
             horaInicio,
@@ -300,12 +300,12 @@ router.get('/GetServicesBySpecialistKey', async (req, res) => {
 router.get('/GetServicesByPatientKey', async (req, res) => {
     try {
         // Obter o valor do parâmetro patientKey da consulta
-        const patientID = req.query.q;
+        const patientKey = req.query.q;
         const ambulatorio = req.query.ambulatorio;
 
         // Verifique se o parâmetro patientKey foi fornecido na consulta
-        if (!patientID) {
-            return res.status(400).json({ error: 'O parâmetro patientID é obrigatório.' });
+        if (!patientKey) {
+            return res.status(400).json({ error: 'O parâmetro patientKey é obrigatório.' });
         }
 
         // Verifique se o valor do ambulatorio é 'geral' ou 'LGBT'
@@ -316,7 +316,7 @@ router.get('/GetServicesByPatientKey', async (req, res) => {
         // Construa uma consulta AQL para buscar documentos na coleção Atendimentos onde _from corresponde ao patientKey e ambulatorio corresponde ao valor fornecido
         const query = aql`
             FOR atendimento IN Service
-            FILTER atendimento.patientId == ${patientID} && atendimento.ambulatorio == ${ambulatorio}
+            FILTER atendimento.keyPaciente == ${patientKey} && atendimento.ambulatorio == ${ambulatorio}
             RETURN atendimento
         `;
 

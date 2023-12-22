@@ -55,8 +55,8 @@ const BuscarPaciente = ({
                 <div>
                   <AsyncSelect
                     placeholder="Nome, CPF, Cartão SUS"
-                    cacheOptions
-                    loadOptions={loadPacienteOptions}
+                    //cacheOptions
+                    loadOptions={(inputValue) => loadPacienteOptions(inputValue, activeButton)}
                     onInputChange={handlePacienteInputChange}
                     onChange={handlePacienteChange}
                     value={selectedPaciente}

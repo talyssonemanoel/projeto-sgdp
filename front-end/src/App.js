@@ -13,6 +13,7 @@ import SettingsPage from "./views/SettingsPage";
 import Layout from "./views/Layout";
 import BoasVindas from "./views/BoasVindas";
 import Prontuario from "./views/Prontuario";
+import Atendimento from "./views/Atendimento";
 import PublicAgendamento from "./views/PublicAgendamento";
 
 export const AuthContext = createContext();
@@ -64,6 +65,7 @@ const App = () => {
           <Route path="boas-vindas" element={<BoasVindas />} /> {/* Adicione esta linha */}
           <Route path="configuracoes" element={<SettingsPage />} /> {/* Adicione esta linha */}
           <Route path="prontuario" element={<Prontuario />} /> {/* Adicione esta linha */}
+          <Route path="atendimento" element={<Atendimento />} /> {/* Adicione esta linha */}
           <Route path="especialidades" element={<Specialties />} />
         </Route>
         <Route path="/" element={<PublicAgendamento />} />

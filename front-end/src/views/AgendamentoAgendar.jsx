@@ -94,13 +94,10 @@ const AgendamentoAgendar = () => {
 
   //const handleShow = () => setShow(true);
   const handleShow = () => {
-    // Mostrar no console a lista de médicos selecionados quando o modal é aberto
-    console.log('Médicos selecionados:', selectedDoctors);
     setShow(true);
   };
 
   const handleDateChange = (date) => {
-    console.log(currentMonth)
     setSelectedDate(date);
     // Muda a data exibida no FullCalendar para a data selecionada
     fullCalendarRef.current.getApi().gotoDate(date);
@@ -173,7 +170,6 @@ const AgendamentoAgendar = () => {
   const handleEventClick = (info) => {
     // info.event contém as informações do evento clicado
     const event = info.event;
-    console.log(event); // Adicione esta linha
 
     // Defina modalInfo aqui
     setModalInfo(event);
@@ -282,7 +278,6 @@ const AgendamentoAgendar = () => {
         // Usa o novo objeto para atualizar o estado especialidadeValue
         setEspecialidadeValue(data);
         setSelectedEspecialidade(data);
-        console.log(data)
       } catch (error) {
         console.error('Erro ao buscar dados de especialidade:', error);
       }
@@ -303,7 +298,6 @@ const AgendamentoAgendar = () => {
         // Usa o novo objeto para atualizar o estado especialidadeValue
         setEspecialidadeValue(data);
         setSelectedEspecialidade(data);
-        console.log(data)
       } catch (error) {
         console.error('Erro ao buscar dados de especialidade:', error);
       }

@@ -128,8 +128,6 @@ const ModalAgendamento = ({
       setEspecialidadeValue(selectedOption);
       setSelectedEspecialidade(selectedOption);
     }
-    console.log("esp", selectedEspecialidade)
-    console.log("evalue",especialidadeValue)
   };
 
 
@@ -195,7 +193,6 @@ const ModalAgendamento = ({
         };
         try {
           const response = await api.post('/agendar/add', data);
-          console.log(data)
           console.log('Dados enviados com sucesso:', response.data);
           var myModalEl = document.getElementById('exampleModal')
           var modal = bootstrap.Modal.getInstance(myModalEl)
@@ -219,7 +216,6 @@ const ModalAgendamento = ({
           }
           setIsSubmitting(false);
         } catch (error) {
-          console.log(data)
           console.error('Erro ao enviar os dados:', error);
         }
       } else {

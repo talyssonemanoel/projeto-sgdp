@@ -68,6 +68,11 @@ const Layout = () => {
                     <Link to="agenda">Agenda</Link>
                   </li>
                 )}
+                {(isMedio || isAdmin) && (
+                  <li>
+                    <Link to="atendimento">Atendimento</Link>
+                  </li>
+                )}
                 <li>
                   <Link to="buscar-paciente">Pacientes</Link>
                 </li>

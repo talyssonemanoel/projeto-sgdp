@@ -20,7 +20,7 @@
     border-color: rgba(0, 0, 0, 0.176);
     border-width: 1px;
     border-radius: 5px;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
     width: auto
 }
 
@@ -135,8 +135,14 @@
 .date-card {
     padding: 0px;
     margin: 0px;
-    max-height: 75px;
+    max-height: 76px;
     max-width: 48px; 
+}
+
+.tipo-nome {
+    color: rgb(108, 117, 125);
+    font-size: 16px;
+    font-style: italic;
 }
 
 .lines {
