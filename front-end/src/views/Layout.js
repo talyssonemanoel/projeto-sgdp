@@ -70,12 +70,10 @@ const Layout = () => {
                 )}
                 {(isMedio || isAdmin) && (
                   <li>
-                    <Link to="atendimento">Atendimento</Link>
+                    <Link to="agenda2">Agenda 2</Link>
                   </li>
                 )}
-                <li>
-                  <Link to="buscar-paciente">Pacientes</Link>
-                </li>
+                
                 {isAdmin && (
                   <li>
                     <Link to="buscar-especialista">Profissionais</Link>
@@ -88,6 +86,9 @@ const Layout = () => {
                 )}
                 <li>
                   <Link to="prontuario">Prontuários</Link>
+                </li>
+                <li>
+                  <Link to="prontuario2">Prontuários 2</Link>
                 </li>
                 <li>
                   <Link to="configuracoes">Configurações</Link>

@@ -281,4 +281,34 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/GetPatientByKey', async (req, res) => {
+    try {
+        // Obter o valor do parâmetro patientKey da consulta
+        const patientKey = req.query.q;
+
+        // Verifique se o parâmetro patientKey foi fornecido na consulta
+        if (!patientKey) {
+            return res.status(400).json({ error: 'O parâmetro patientKey é obrigatório.' });
+        }
+
+        // Construa uma consulta AQL para buscar documentos na coleção Atendimentos onde _from corresponde ao patientKey e ambulatorio corresponde ao valor fornecido
+        const query = aql`
+            FOR patient IN Person
+            FILTER patient._key == ${patientKey}
+            RETURN patient
+        `;
+
+        // Execute a consulta no banco de dados
+        const cursor = await db.query(query);
+        const paciente = await cursor.next();
+
+        // Envie os documentos encontrados como resposta
+        res.json(paciente);
+    } catch (error) {
+        console.error('Erro ao buscar paciente por patientKey:', error);
+        res.status(500).json({ error: 'Erro ao buscar atendimentos por patientKey' });
+    }
+});
+
+
 module.exports = router;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import api from './services/api';
 import Login from "./views/Login";
-import AgendamentoAgendar from "./views/AgendamentoAgendar";
+import Agenda from "./views/Agenda";
 import AgendamentoCancelar from "./views/AgendamentoCancelar";
 import PacienteCadastro from "./views/PacienteCadastro";
 import PacientePesquisa from "./views/PacientePesquisa";
@@ -13,8 +13,22 @@ import SettingsPage from "./views/SettingsPage";
 import Layout from "./views/Layout";
 import BoasVindas from "./views/BoasVindas";
 import Prontuario from "./views/Prontuario";
-import Atendimento from "./views/Atendimento";
+import ProntuarioEspecialista from "./views/ProntuarioEspecialista";
+import AgendaEspecialista from "./views/AgendaEspecialista";
 import PublicAgendamento from "./views/PublicAgendamento";
+
+const User = {
+    _id: "Employees/8002982",
+    _key: "8002982",
+    nome: "Rashi",
+    endereco: "R. Amaro Domingos",
+    ocupacaoAmbulatorio: "Especialista",
+    CPF: "865.538.410-04",
+    idEspecialidade: "6975847",
+    nomeEspecialidade: "Massoterapeuta",
+    Email: "zhivka6254@uorak.com",
+  }
+
 
 export const AuthContext = createContext();
 
@@ -56,7 +70,8 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/acesso" element={authData ? <Layout /> : <Navigate to="/login" replace />}>
         <Route index element={<BoasVindas />} />
-          <Route path="agenda" element={<AgendamentoAgendar />} />
+          <Route path="agenda" element={<Agenda />} />
+          <Route path="agenda2" element={<AgendaEspecialista User={User}/>} />
           <Route path="cancelar-agendamento" element={<AgendamentoCancelar />} />
           <Route path="cadastrar-paciente" element={<PacienteCadastro />} />
           <Route path="buscar-paciente" element={<PacientePesquisa />} />
@@ -65,7 +80,7 @@ const App = () => {
           <Route path="boas-vindas" element={<BoasVindas />} /> {/* Adicione esta linha */}
           <Route path="configuracoes" element={<SettingsPage />} /> {/* Adicione esta linha */}
           <Route path="prontuario" element={<Prontuario />} /> {/* Adicione esta linha */}
-          <Route path="atendimento" element={<Atendimento />} /> {/* Adicione esta linha */}
+          <Route path="prontuario2" element={<ProntuarioEspecialista User={User}/>} /> {/* Adicione esta linha */}
           <Route path="especialidades" element={<Specialties />} />
         </Route>
         <Route path="/" element={<PublicAgendamento />} />

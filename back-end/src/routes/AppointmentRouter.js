@@ -332,5 +332,45 @@ router.get('/GetServicesByPatientKey', async (req, res) => {
     }
 });
 
+router.get('/GetServicesByPatientKeyAndSpecialistKey', async (req, res) => {
+    try {
+        // Obter o valor do parâmetro patientKey da consulta
+        const patientKey = req.query.patient;
+        const SpecialistKey = req.query.specialist;
+        const ambulatorio = req.query.ambulatorio;
+
+        // Verifique se o parâmetro patientKey foi fornecido na consulta
+        if (!patientKey) {
+            return res.status(400).json({ error: 'O parâmetro patientKey é obrigatório.' });
+        }
+
+        if (!SpecialistKey) {
+            return res.status(400).json({ error: 'O parâmetro SpecialistKey é obrigatório.' });
+        }
+
+        // Verifique se o valor do ambulatorio é 'geral' ou 'LGBT'
+        if (ambulatorio !== 'Geral' && ambulatorio !== 'LGBT') {
+            return res.status(400).json({ error: 'O valor do ambulatório é inválido. Deve ser "geral" ou "LGBT".' });
+        }
+
+        // Construa uma consulta AQL para buscar documentos na coleção Atendimentos onde _from corresponde ao patientKey e ambulatorio corresponde ao valor fornecido
+        const query = aql`
+            FOR atendimento IN Service
+            FILTER atendimento.keyPaciente == ${patientKey} && atendimento.keyEspecialista == ${SpecialistKey} && atendimento.ambulatorio == ${ambulatorio}
+            RETURN atendimento
+        `;
+
+        // Execute a consulta no banco de dados
+        const cursor = await db.query(query);
+        const atendimentos = await cursor.all();
+
+        // Envie os documentos encontrados como resposta
+        res.json(atendimentos);
+    } catch (error) {
+        console.error('Erro ao buscar atendimentos por patientKey:', error);
+        res.status(500).json({ error: 'Erro ao buscar atendimentos por patientKey' });
+    }
+});
+
 
 module.exports = router;

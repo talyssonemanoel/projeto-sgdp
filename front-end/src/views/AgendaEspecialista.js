@@ -12,9 +12,9 @@ import ColorHash from 'color-hash';
 import ModalAgendamento from '../components/ModalAgendamento'; // Importe o componente de modal
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-calendar/dist/Calendar.css';
-import '../css/AgendamentoAgendar.css';
+import '../css/Agenda.css';
 
-const AgendamentoAgendar = () => {
+const AgendaEspecialista = ({ User }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [options, setOptions] = useState([]);
@@ -28,16 +28,19 @@ const AgendamentoAgendar = () => {
   const [selectedAppointmentDate, setSelectedAppointmentDate] = useState('');
   const [currentMonth, setCurrentMonth] = useState('');
   const [selectedEspecialista, setSelectedEspecialista] = useState(null);
-  const [especialidadeValue, setEspecialidadeValue] = useState(null);
+  const [selectedPacientes, setSelectedPacientes] = useState(null);
+  const [especialidadeKey, setEspecialidadeKey] = useState(null);
   const [selectedEspecialidade, setSelectedEspecialidade] = useState(null);
   const fullCalendarRef = React.useRef();
   const colorHash = new ColorHash();
   const timeOptions = [];
 
   useEffect(() => {
-    // Carrega as opções iniciais
+    handleDoctorChange(User, currentMonth);
     loadOptions("");
-  }, []);
+  }, [User]);
+
+  console.log(selectedEspecialista)
 
   const handleCalendarViewChange = (info) => {
     // Certifica-se de que a propriedade 'view' existe antes de tentar acessá-la
@@ -68,13 +71,13 @@ const AgendamentoAgendar = () => {
       let startMinute = j.toString().padStart(2, '0');
       let endHour = (j === 30 ? (i + 1) : i).toString().padStart(2, '0');
       let endMinute = (j === 30 ? '00' : '30');
-      timeOptions.push({ value: `${startHour}:${startMinute}-${endHour}:${endMinute}`, label: `${startHour}:${startMinute} - ${endHour}:${endMinute}` });
+      timeOptions.push({ Key: `${startHour}:${startMinute}-${endHour}:${endMinute}`, nome: `${startHour}:${startMinute} - ${endHour}:${endMinute}` });
     }
   }
 
   const handleAppointmentDateChange = (event) => {
-    setSelectedAppointmentDate(event.target.value);
-    console.log(event.target.value)
+    setSelectedAppointmentDate(event.target._key);
+    console.log(event.target._key)
   };
 
   const handleTimeChange = (selectedOption) => {
@@ -108,8 +111,8 @@ const AgendamentoAgendar = () => {
       // Lógica para processar a nova data e hora
       const dataHora = {
         data: selectedAppointmentDate,
-        horaInicio: selectedTime ? selectedTime.value.split('-')[0] : '',
-        horaFim: selectedTime ? selectedTime.value.split('-')[1] : '',
+        horaInicio: selectedTime ? selectedTime._key.split('-')[0] : '',
+        horaFim: selectedTime ? selectedTime._key.split('-')[1] : '',
       };
 
       try {
@@ -179,17 +182,17 @@ const AgendamentoAgendar = () => {
   };
 
 
-  const loadOptions = async (inputValue) => {
-    if (inputValue) {
+  const loadOptions = async (inputKey) => {
+    if (inputKey) {
       try {
-        const response = await api.get('/doctors/livesearch', { params: { q: inputValue } });
-        const doctorOptions = response.data.map(doctor => ({ value: doctor._key, label: doctor.nome, specialty: doctor.nomeEspecialidade }));
+        const response = await api.get('/doctors/livesearch', { params: { q: inputKey } });
+        const doctorOptions = response.data.map(doctor => ({ _key: doctor._key, nome: doctor.nome, specialty: doctor.nomeEspecialidade }));
         setOptions(doctorOptions);
       } catch (error) {
         console.error('Erro ao buscar médicos:', error);
       }
     } else {
-      // Se inputValue estiver vazio, limpe as opções
+      // Se inputKey estiver vazio, limpe as opções
       //setOptions([]);
     }
   };
@@ -198,7 +201,7 @@ const AgendamentoAgendar = () => {
   const handleDoctorChange = async (selectedDoctor, currentMonth) => {
     if (selectedDoctor) {
       // Gere uma cor única com base no valor do médico
-      const color = colorHash.hex(selectedDoctor.value);
+      const color = colorHash.hex(selectedDoctor._key);
       // Adicione a cor ao objeto do médico
       const doctorWithColor = { ...selectedDoctor, color };
 
@@ -215,7 +218,7 @@ const AgendamentoAgendar = () => {
 
       const response = await api.get('/agendar/GetServicesBySpecialistKey', {
         params: {
-          keyEspecialista: selectedDoctor.value,
+          keyEspecialista: selectedDoctor._key,
           status: status,
           date: formattedDate // Use a data formatada
         }
@@ -230,9 +233,9 @@ const AgendamentoAgendar = () => {
           title: `${appointment.nomePaciente} (${appointment.tipo})`,
           start: start,
           end: end,
-          groupId: selectedDoctor.value,
+          groupId: selectedDoctor._key,
           tipo: appointment.tipo,
-          color: appointment.status === 'finalizado' ? 'black' : color,
+          color: colorHash.hex(appointment._key)
         };
       });
       setEvents((prevEvents) => [...prevEvents, ...doctorAppointments]);
@@ -242,15 +245,15 @@ const AgendamentoAgendar = () => {
 
 
   const getAvailableOptions = () => {
-    return options.filter(option => !selectedDoctors.find(doctor => doctor.value === option.value));
+    return options.filter(option => !selectedDoctors.find(doctor => doctor._key === option._key));
   };
 
-  const handleInputChange = (inputValue) => {
+  const handleInputChange = (inputKey) => {
     setSelectedOption(null);
-    loadOptions(inputValue);
+    loadOptions(inputKey);
   };
 
-  const DoctorItem = ({ doctor, onRemoveDoctor }) => {
+  const EventItem = ({ doctor, onRemoveDoctor }) => {
     // Crie uma string de estilo com a cor de fundo com base na cor do médico
     const dotStyle = {
       backgroundColor: doctor.color, // Use a cor atribuída ao médico
@@ -270,13 +273,13 @@ const AgendamentoAgendar = () => {
     
         // Cria um novo objeto com apenas os atributos que você precisa
         const data = {
-          value: response.data._id,
-          label: response.data.nome,
+          _key: response.data._id,
+          nome: response.data.nome,
           servicos: response.data.servicos
         };
     
-        // Usa o novo objeto para atualizar o estado especialidadeValue
-        setEspecialidadeValue(data);
+        // Usa o novo objeto para atualizar o estado especialidadeKey
+        setEspecialidadeKey(data);
         setSelectedEspecialidade(data);
       } catch (error) {
         console.error('Erro ao buscar dados de especialidade:', error);
@@ -290,13 +293,13 @@ const AgendamentoAgendar = () => {
     
         // Cria um novo objeto com apenas os atributos que você precisa
         const data = {
-          value: response.data._id,
-          label: response.data.nome,
+          _key: response.data._id,
+          nome: response.data.nome,
           servicos: response.data.servicos
         };
     
-        // Usa o novo objeto para atualizar o estado especialidadeValue
-        setEspecialidadeValue(data);
+        // Usa o novo objeto para atualizar o estado especialidadeKey
+        setEspecialidadeKey(data);
         setSelectedEspecialidade(data);
       } catch (error) {
         console.error('Erro ao buscar dados de especialidade:', error);
@@ -310,16 +313,8 @@ const AgendamentoAgendar = () => {
         <div className='w-100 d-flex align-items-center justify-content-between'>
           <span className="doctor-color-dot" style={dotStyle}></span>
           <div key={doctor.id} onClick={() => handleEspecialistaItemClick(doctor)}>
-            {doctor.label}
+            {doctor.title}
           </div>
-          <button
-            type="button"
-            className="button-X h-100"
-            style={{ backgroundColor: 'transparent', border: 'none' }}
-            onClick={() => onRemoveDoctor(doctor)}
-          >
-            <i class="fa-solid fa-xmark"></i>
-          </button>
         </div>
       </li>
 
@@ -329,36 +324,18 @@ const AgendamentoAgendar = () => {
 
   const handleRemoveDoctor = (doctorToRemove) => {
     // Remove o médico da lista de médicos selecionados
-    setSelectedDoctors((prevDoctors) => prevDoctors.filter((doctor) => doctor.value !== doctorToRemove.value));
+    setSelectedDoctors((prevDoctors) => prevDoctors.filter((doctor) => doctor._key !== doctorToRemove._key));
 
     setSelectedEspecialista(null)
     setSelectedEspecialidade('')
-    setEspecialidadeValue('')
+    setEspecialidadeKey('')
     // Remove os agendamentos do médico removido
-    setEvents((prevEvents) => prevEvents.filter((event) => event.groupId !== doctorToRemove.value));
+    setEvents((prevEvents) => prevEvents.filter((event) => event.groupId !== doctorToRemove._key));
   };
 
 
   return (
     <div className="calendar-container">
-      <ModalAgendamento
-        calendarRef={fullCalendarRef}
-        events={events}
-        setEvents={setEvents}
-        selectedDoctors={selectedDoctors}
-        setSelectedDoctors={setSelectedDoctors}
-        handleDoctorChange={handleDoctorChange}
-        selectedTime={selectedTime}
-        setSelectedTime={setSelectedTime}
-        timeOptions={timeOptions}
-        handleTimeChange={handleTimeChange}
-        selectedEspecialista={selectedEspecialista}
-        setSelectedEspecialista={setSelectedEspecialista}
-        especialidadeValue={especialidadeValue}
-        setEspecialidadeValue={setEspecialidadeValue}
-        selectedEspecialidade={selectedEspecialidade}
-        setSelectedEspecialidade={setSelectedEspecialidade}
-      />
       <style>
         {`
           .main-content {
@@ -416,34 +393,14 @@ const AgendamentoAgendar = () => {
         `}
       </style>
       <div className="menu-agendar">
-        <div className="bt-div">
-          <button type="button" className="btn btn-primary bt-agendar" data-bs-toggle="modal" data-bs-target="#exampleModal">
-            <i className="bi bi-plus-lg icone"></i>
-            Agendar
-          </button>
-        </div>
-        <div className="mini-calendar">
-          <Calendar onChange={handleDateChange} value={selectedDate} />
-        </div>
-        <div className="input-group mb-3">
-          <span className="input-group-text" id="basic-addon1">
-            <i className="fa-solid fa-user-doctor" style={{ color: '#0d6efd' }}></i>
-          </span>
-          <div style={{ flex: 1, maxWidth: '80%' }}>
-            <Select
-              placeholder="Especialista"
-              value={selectedOption}
-              options={getAvailableOptions()}
-              onInputChange={handleInputChange}
-              onChange={handleDoctorChange}
-            />
-          </div>
+        <div className="titulo-menu-left">
+          Pacientes do dia
         </div>
         <ul className="list-group">
-          {selectedDoctors.map((doctor) => (
-            <DoctorItem
-              key={doctor.value}
-              doctor={doctor}
+          {events.map((event) => (
+            <EventItem
+              key={event._key}
+              doctor={event}
               onRemoveDoctor={handleRemoveDoctor}
             />
           ))}
@@ -526,7 +483,7 @@ const AgendamentoAgendar = () => {
                       <div>
                         <label htmlFor="dateInput" className="form-label">Data</label>
                         <div className="">
-                          <input id='dateInput' type="date" className="form-control inputdata-hora " value={selectedAppointmentDate} onChange={handleAppointmentDateChange} />
+                          <input id='dateInput' type="date" className="form-control inputdata-hora " _key={selectedAppointmentDate} onChange={handleAppointmentDateChange} />
                         </div>
                       </div>
                     </div>
@@ -573,4 +530,4 @@ const AgendamentoAgendar = () => {
   );
 };
 
-export default AgendamentoAgendar;
+export default AgendaEspecialista;
