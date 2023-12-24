@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Modal, Button } from "react-bootstrap";
 import api from './services/api';
 import Login from "./views/Login";
 import Agenda from "./views/Agenda";
@@ -29,40 +30,65 @@ const User = {
     Email: "zhivka6254@uorak.com",
   }
 
+  export const AuthContext = createContext();
 
-export const AuthContext = createContext();
-
-const App = () => {
-  const [authData, setAuthData] = useState(null);
-
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-
-    if (storedToken) {
-      verifyToken(storedToken);
-    } else {
-      setAuthData(false); // Defina como não autenticado se não houver token
-    }
-  }, []);
-
-  const verifyToken = async (token) => {
-    try {
-      const response = await api.get(`verify?token=${token}`);
-      if (response.status === 200) {
-        setAuthData(true); // Defina como autenticado se o token for válido
-      } else if (response.status === 401) {
-        setAuthData(false); // Defina como não autenticado se o token for inválido
+  const App = () => {
+    const [authData, setAuthData] = useState(null);
+    const [tokenChecked, setTokenChecked] = useState(false);
+    const [showSessionExpiredModal, setShowSessionExpiredModal] = useState(false);
+  
+    useEffect(() => {
+      const storedToken = localStorage.getItem("token");
+  
+      if (storedToken) {
+        verifyToken(storedToken);
+      } else {
+        setAuthData(false);
+        setTokenChecked(true); // Marcar como verificado mesmo que não haja token
       }
-    } catch (error) {
-      console.error(error);
-      setAuthData(false); // Defina como não autenticado em caso de erro
+  
+      const clickListener = () => {
+        verifyToken(localStorage.getItem("token"));
+      };
+  
+      window.addEventListener("click", clickListener);
+  
+      return () => {
+        window.removeEventListener("click", clickListener);
+      };
+    }, []);
+  
+    useEffect(() => {
+      // Se a verificação do token foi feita e o token não é válido, exibir o modal
+      if (tokenChecked && authData === false) {
+        setShowSessionExpiredModal(true);
+      }
+    }, [tokenChecked, authData]);
+  
+    const verifyToken = async (token) => {
+      try {
+        const response = await api.get(`verify?token=${token}`);
+        if (response.status === 200) {
+          setAuthData(true);
+        } else if (response.status === 401) {
+          setAuthData(false);
+        }
+      } catch (error) {
+        console.error(error);
+        setAuthData(false);
+      } finally {
+        setTokenChecked(true); // Marcar como verificado após a tentativa de verificação
+      }
+    };
+  
+    const handleCloseModal = () => {
+      setShowSessionExpiredModal(false);
+      setAuthData(false);
+    };
+  
+    if (!tokenChecked) {
+      return null; // Aguarde a verificação antes de renderizar qualquer coisa
     }
-  };
-
-  if (authData === null) {
-    return null; // Aguarde a verificação antes de renderizar qualquer coisa
-  }
-
 
   return (
     <AuthContext.Provider value={{ authData, setAuthData }}>
@@ -86,6 +112,20 @@ const App = () => {
         <Route path="/" element={<PublicAgendamento />} />
         <Route path="*" element={<div>Página não encontrada</div>} />
       </Routes>
+      {/* Modal para a sessão expirada */}
+      <Modal show={showSessionExpiredModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Sessão Expirada</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Sua sessão expirou. Por favor, faça login novamente.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={handleCloseModal}>
+            Fechar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </AuthContext.Provider>
   );
 };
