@@ -8,7 +8,7 @@ const uuid = require('uuid');
 const _ = require('lodash');
 
 const { verifyAvancadoAuth, verifySimplesAuth } = require('../../middlewares/authMiddleware'); // Importe o middleware de autenticação
-const { generateUniqueUsername, generateRandomPassword, sendLoginCredentials } = require('./OtherFunctions');
+const { generateUniqueUsername, generateRandomPassword, sendLoginCredentials, sendPasswordResetEmail } = require('./OtherFunctions');
 
 // Importar as configurações do banco de dados
 const { dbUrl, dbName, dbUser, dbPass } = require('../../config');
@@ -71,6 +71,58 @@ router.post('/add', verifyAvancadoAuth, async (req, res) => {
         res.status(500).json({ error: 'Erro ao adicionar funcionário' });
     }
 });
+
+// Rota para solicitar a alteração de senha
+router.post('/reset-password', async (req, res) => {
+    try {
+      const { emailOrUsername } = req.body;
+  
+      // Verifique se o email ou nome de usuário foi fornecido
+      if (!emailOrUsername) {
+        return res.status(400).json({ error: 'Campo "emailOrUsername" é obrigatório.' });
+      }
+  
+      // Consulte o banco de dados para encontrar o funcionário com base no email ou nome de usuário
+      const cursor = await db.query({
+        query: `
+          FOR employee IN Employees
+            FILTER employee.Email == @emailOrUsername || employee.username == @emailOrUsername
+            RETURN employee
+        `,
+        bindVars: { emailOrUsername },
+      });
+  
+      const employee = await cursor.next();
+  
+      if (!employee) {
+        return res.status(404).json({ error: 'Nenhum funcionário encontrado com o email ou nome de usuário fornecido.' });
+      }
+  
+      // Gere uma nova senha aleatória
+      const newPassword = generateRandomPassword();
+  
+      // Crie um hash da senha usando bcrypt
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+  
+      // Atualize a senha do funcionário no banco de dados
+      await db.query({
+        query: `
+          FOR employee IN Employees
+            FILTER employee._key == @employeeKey
+            UPDATE { _key: employee._key, password: @hashedPassword } IN Employees
+        `,
+        bindVars: { employeeKey: employee._key, hashedPassword },
+      });
+  
+      // Envie um email com as novas credenciais de login
+      await sendPasswordResetEmail(employee.Email, newPassword);
+  
+      res.status(200).json({ message: 'Um email com as instruções para resetar a senha foi enviado.' });
+    } catch (error) {
+      console.error('Erro ao solicitar alteração de senha:', error);
+      res.status(500).json({ error: 'Erro ao solicitar alteração de senha.' });
+    }
+  });
 
 router.get('/search', verifyAvancadoAuth, async (req, res) => {
     try {

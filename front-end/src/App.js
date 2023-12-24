@@ -9,8 +9,10 @@ import PacienteCadastro from "./views/PacienteCadastro";
 import PacientePesquisa from "./views/PacientePesquisa";
 import EspecialistaCadastrar from "./views/EspecialistaCadastrar";
 import EspecialistaPesquisa from "./views/EspecialistaPesquisa";
+import Recuperar from "./views/Recuperar";
 import Specialties from "./views/Specialties";
 import SettingsPage from "./views/SettingsPage";
+import AppWrapper from "./AppWrapper";
 import Layout from "./views/Layout";
 import BoasVindas from "./views/BoasVindas";
 import Prontuario from "./views/Prontuario";
@@ -94,7 +96,7 @@ const User = {
     <AuthContext.Provider value={{ authData, setAuthData }}>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/acesso" element={authData ? <Layout /> : <Navigate to="/login" replace />}>
+        <Route path="/acesso" element={authData ? <AppWrapper /> : <Navigate to="/login" replace />}>
         <Route index element={<BoasVindas />} />
           <Route path="agenda" element={<Agenda />} />
           <Route path="agenda2" element={<AgendaEspecialista User={User}/>} />
@@ -110,6 +112,7 @@ const User = {
           <Route path="especialidades" element={<Specialties />} />
         </Route>
         <Route path="/" element={<PublicAgendamento />} />
+        <Route path="/recovery" element={<Recuperar />} />
         <Route path="*" element={<div>Página não encontrada</div>} />
       </Routes>
       {/* Modal para a sessão expirada */}
