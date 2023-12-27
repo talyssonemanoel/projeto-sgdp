@@ -38,6 +38,33 @@ async function sendLoginCredentials(email, username, password) {
     }
 }
 
+// Função para enviar um email com as instruções de redefinição de senha
+async function sendPasswordResetEmail(email, newPassword) {
+  const transporter = nodemailer.createTransport({
+    host: 'smtp-relay.sendinblue.com',
+    port: 587,
+    secure: false, // Use false para a porta 587
+    auth: {
+      user: 'lucaspraxlt@gmail.com', // Seu endereço de email
+      pass: '6yd0mM9OEIjH5Wn7', // Sua chave SMTP
+    },
+  });
+
+  const mailOptions = {
+    from: 'm94883020@gmail.com', // Seu endereço de email
+    to: email,
+    subject: 'Redefinição de Senha',
+    text: `Sua senha foi redefinida com sucesso. Nova senha: ${newPassword}`,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email de redefinição de senha enviado: ', info.response);
+  } catch (error) {
+    console.error('Erro ao enviar o email de redefinição de senha:', error);
+  }
+}
+
 // Função para gerar uma senha aleatória
 function generateRandomPassword() {
     // Gere uma senha aleatória como preferir, por exemplo, usando caracteres alfanuméricos
@@ -161,5 +188,5 @@ async function getSpecialtyNameById(specialtyId) {
 }
 
 module.exports = {
-    getPersonByKey, generateUniqueUsername, sendLoginCredentials, isUsernameTaken, getIdForRealDoctorByKey, getSpecialtyIdByName, getSpecialtyNameById, generateRandomPassword
+    getPersonByKey, generateUniqueUsername, sendPasswordResetEmail, sendLoginCredentials, isUsernameTaken, getIdForRealDoctorByKey, getSpecialtyIdByName, getSpecialtyNameById, generateRandomPassword
 };

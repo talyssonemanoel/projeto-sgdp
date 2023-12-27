@@ -109,7 +109,9 @@ const LoginPage = () => {
           />
           <ErrorMessage error={error} />
           <div className="login-buttons">
-            <button className="forgot-password-button">Esqueceu a senha?</button>
+          <Link to="/recovery" className="forgot-password-button">
+              Esqueceu a senha?
+            </Link>
             <button className="privacy-policy-button">Política de Privacidade</button>
           </div>
         </div> 

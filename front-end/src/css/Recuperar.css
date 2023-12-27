@@ -1,0 +1,61 @@
+/* src/css/Recuperar.css */
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-image: url('../img/blur-hospital.jpg'); /* Substitua pelo caminho da sua imagem */
+    background-size: cover;
+    background-repeat: no-repeat;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .recuperar-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  
+  .recuperar-form-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 800px;
+  }
+  
+  .recuperar-heading {
+    text-align: center;
+    color: #333;
+  }
+  
+  .recuperar-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .recuperar-label {
+    margin-bottom: 10px;
+  }
+  
+  .recuperar-input {
+    padding: 8px;
+    margin-bottom: 15px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .recuperar-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .recuperar-button:hover {
+    background-color: #0056b3;
+  }
+  
