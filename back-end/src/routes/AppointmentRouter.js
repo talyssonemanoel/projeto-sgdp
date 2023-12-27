@@ -338,7 +338,8 @@ router.get('/GetServicesByPatientKeyAndSpecialistKey', async (req, res) => {
         const patientKey = req.query.patient;
         const SpecialistKey = req.query.specialist;
         const ambulatorio = req.query.ambulatorio;
-
+        const status = req.query.status;
+        console.log(ambulatorio)
         // Verifique se o parâmetro patientKey foi fornecido na consulta
         if (!patientKey) {
             return res.status(400).json({ error: 'O parâmetro patientKey é obrigatório.' });
@@ -356,7 +357,7 @@ router.get('/GetServicesByPatientKeyAndSpecialistKey', async (req, res) => {
         // Construa uma consulta AQL para buscar documentos na coleção Atendimentos onde _from corresponde ao patientKey e ambulatorio corresponde ao valor fornecido
         const query = aql`
             FOR atendimento IN Service
-            FILTER atendimento.keyPaciente == ${patientKey} && atendimento.keyEspecialista == ${SpecialistKey} && atendimento.ambulatorio == ${ambulatorio}
+            FILTER atendimento.keyPaciente == ${patientKey} && atendimento.keyEspecialista == ${SpecialistKey} && atendimento.ambulatorio == ${ambulatorio} && atendimento.status == ${status}
             RETURN atendimento
         `;
 
@@ -369,6 +370,36 @@ router.get('/GetServicesByPatientKeyAndSpecialistKey', async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar atendimentos por patientKey:', error);
         res.status(500).json({ error: 'Erro ao buscar atendimentos por patientKey' });
+    }
+});
+
+router.put('/finalizar', /*verifySimplesAuth,*/ async (req, res) => {
+    try {
+        const { _key, info, infoPrivado } = req.body;
+
+        // Atualiza as informações do agendamento
+        const query = aql`
+        UPDATE ${_key}
+        WITH { 
+          info: ${info},
+          infoPrivado: ${infoPrivado},
+          status: "finalizado"
+        }
+        IN Service
+        RETURN NEW
+      `;
+
+        const cursor = await db.query(query);
+        const updatedAppointment = await cursor.next();
+
+        if (!updatedAppointment) {
+            return res.status(404).json({ error: 'Agendamento não encontrado.' });
+        }
+
+        res.json({ message: 'Agendamento finalizado com sucesso', appointment: updatedAppointment });
+    } catch (error) {
+        console.error('Erro ao concluir agendamento:', error);
+        res.status(500).json({ error: 'Erro ao finalizar agendamento' });
     }
 });
 

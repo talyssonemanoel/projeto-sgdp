@@ -124,6 +124,14 @@
     
 }
 
+.fonte-da-lista-atendimento {
+    font-size: smaller!important;
+}
+
+.fonte-da-lista-atendimento-hora {
+    font-size: x-small!important;
+}
+
 .block-atendimento-hora {
     background-color: white;
     font-size: x-large;

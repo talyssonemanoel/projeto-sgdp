@@ -79,6 +79,11 @@ const Prontuario = () => {
     setPacienteInputValue('');
   };
 
+  const handleFecharPaciente = () => {
+    handlePacienteChange('')
+    setActiveButton('')
+}
+
   // Obtenha uma lista de todas as especialidades únicas
   const especialidades = [...new Set(atendimentos.filter(atendimento => atendimento.status === "finalizado").map(atendimento => atendimento.especialidade))];
 
@@ -130,7 +135,7 @@ const Prontuario = () => {
                             <h6>{selectedPaciente.label}</h6>
                           </div>
                           <div>
-                            <button type="button" class="btn-close d-flex align-items-start p-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close d-flex align-items-start p-0" aria-label="Close" onClick={handleFecharPaciente}></button>
                           </div>
                         </div>
                         <h7>{age} anos</h7>
@@ -150,7 +155,7 @@ const Prontuario = () => {
                         <div class='d-flex justify-content-between'>
                           <h4 class='mx-auto'>FICHA INDIVIDUAL</h4>
                           <div className=''>
-                            <button type="button" class="btn-close d-flex align-items-start p-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close d-flex align-items-start p-0" aria-label="Close" onClick={handleFecharPaciente}></button>
                           </div>
                         </div>
                         <div class='divisor-subtitle'>

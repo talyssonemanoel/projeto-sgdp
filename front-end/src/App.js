@@ -68,7 +68,7 @@ const App = () => {
     <AuthContext.Provider value={{ authData, setAuthData }}>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/acesso" element={authData ? <Layout /> : <Navigate to="/login" replace />}>
+        <Route path="/" element={authData ? <Layout /> : <Navigate to="/login" replace />}>
         <Route index element={<BoasVindas />} />
           <Route path="agenda" element={<Agenda />} />
           <Route path="agenda2" element={<AgendaEspecialista User={User}/>} />
@@ -83,7 +83,6 @@ const App = () => {
           <Route path="prontuario2" element={<ProntuarioEspecialista User={User}/>} /> {/* Adicione esta linha */}
           <Route path="especialidades" element={<Specialties />} />
         </Route>
-        <Route path="/" element={<PublicAgendamento />} />
         <Route path="*" element={<div>Página não encontrada</div>} />
       </Routes>
     </AuthContext.Provider>

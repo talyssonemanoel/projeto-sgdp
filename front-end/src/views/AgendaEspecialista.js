@@ -9,7 +9,7 @@ import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 import Select from 'react-select';
 import api from "../services/api";
 import ColorHash from 'color-hash';
-import ModalAgendamento from '../components/ModalAgendamento'; // Importe o componente de modal
+import { useNavigate } from 'react-router-dom';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-calendar/dist/Calendar.css';
 import '../css/Agenda.css';
@@ -34,6 +34,8 @@ const AgendaEspecialista = ({ User }) => {
   const fullCalendarRef = React.useRef();
   const colorHash = new ColorHash();
   const timeOptions = [];
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     handleDoctorChange(User, currentMonth);
@@ -192,8 +194,6 @@ const AgendaEspecialista = ({ User }) => {
         console.error('Erro ao buscar médicos:', error);
       }
     } else {
-      // Se inputKey estiver vazio, limpe as opções
-      //setOptions([]);
     }
   };
 
@@ -228,6 +228,7 @@ const AgendaEspecialista = ({ User }) => {
         const start = `${appointment.data}T${appointment.horaInicio}:00`;
         const end = `${appointment.data}T${appointment.horaFim}:00`;
         return {
+          atendimento: appointment,
           id: appointment._key,
           status: appointment.status,
           title: `${appointment.nomePaciente} (${appointment.tipo})`,
@@ -240,7 +241,7 @@ const AgendaEspecialista = ({ User }) => {
       });
       setEvents((prevEvents) => [...prevEvents, ...doctorAppointments]);
     }
-    setSelectedOption(null); // Limpa a seleção atual
+    setSelectedOption(null); 
   };
 
 
@@ -253,86 +254,32 @@ const AgendaEspecialista = ({ User }) => {
     loadOptions(inputKey);
   };
 
-  const EventItem = ({ doctor, onRemoveDoctor }) => {
+  const EventItem = ({ event }) => {
     // Crie uma string de estilo com a cor de fundo com base na cor do médico
     const dotStyle = {
-      backgroundColor: doctor.color, // Use a cor atribuída ao médico
+      backgroundColor: event.color, // Use a cor atribuída ao médico
     };
 
-    const handleEspecialistaItemClick = async (doctor) => {
-      // Se o médico clicado for o mesmo que já está selecionado, deselecione-o
-      const newSelectedDoctor = selectedEspecialista === doctor ? null : doctor;
-    
-      setSelectedEspecialista(newSelectedDoctor);
-
-      try {
-        // Faz uma solicitação GET para a rota /especialidade/SpecialtyByName
-        const response = await api.get('/especialidade/SpecialtyByName', {
-          params: { q: doctor.specialty }
-        });
-    
-        // Cria um novo objeto com apenas os atributos que você precisa
-        const data = {
-          _key: response.data._id,
-          nome: response.data.nome,
-          servicos: response.data.servicos
-        };
-    
-        // Usa o novo objeto para atualizar o estado especialidadeKey
-        setEspecialidadeKey(data);
-        setSelectedEspecialidade(data);
-      } catch (error) {
-        console.error('Erro ao buscar dados de especialidade:', error);
-      }
-    
-      try {
-        // Faz uma solicitação GET para a rota /especialidade/SpecialtyByName
-        const response = await api.get('/especialidade/SpecialtyByName', {
-          params: { q: doctor.specialty }
-        });
-    
-        // Cria um novo objeto com apenas os atributos que você precisa
-        const data = {
-          _key: response.data._id,
-          nome: response.data.nome,
-          servicos: response.data.servicos
-        };
-    
-        // Usa o novo objeto para atualizar o estado especialidadeKey
-        setEspecialidadeKey(data);
-        setSelectedEspecialidade(data);
-      } catch (error) {
-        console.error('Erro ao buscar dados de especialidade:', error);
-      }
+    const handleEventItemClick = async (event) => {
+      navigate('/prontuario2', { state: { event: event } });
     };
 
-    const itemStyle = selectedEspecialista === doctor ? { backgroundColor: '#dddddd' } : {};
-
+   
     return (
-      <li className="list-group-item" type="button" style={itemStyle}>
+      <li className="list-group-item" type="button">
         <div className='w-100 d-flex align-items-center justify-content-between'>
           <span className="doctor-color-dot" style={dotStyle}></span>
-          <div key={doctor.id} onClick={() => handleEspecialistaItemClick(doctor)}>
-            {doctor.title}
+          <div key={event._key} onClick={() => handleEventItemClick(event)}>
+            <div className='fonte-da-lista-atendimento-hora'>
+              {event.atendimento.horaInicio} - {event.atendimento.horaFim}
+            </div>
+            {event.title}
           </div>
         </div>
       </li>
 
     );
   };
-
-
-  const handleRemoveDoctor = (doctorToRemove) => {
-    // Remove o médico da lista de médicos selecionados
-    setSelectedDoctors((prevDoctors) => prevDoctors.filter((doctor) => doctor._key !== doctorToRemove._key));
-
-    setSelectedEspecialista(null)
-    setSelectedEspecialidade('')
-    setEspecialidadeKey('')
-    // Remove os agendamentos do médico removido
-    setEvents((prevEvents) => prevEvents.filter((event) => event.groupId !== doctorToRemove._key));
-  };
-
 
   return (
     <div className="calendar-container">
@@ -393,15 +340,14 @@ const AgendaEspecialista = ({ User }) => {
         `}
       </style>
       <div className="menu-agendar">
-        <div className="titulo-menu-left">
+        <div className="titulo-menu-left mb-3">
           Pacientes do dia
         </div>
-        <ul className="list-group">
+        <ul className="list-group me-1 ms-1 fonte-da-lista-atendimento">
           {events.map((event) => (
             <EventItem
               key={event._key}
-              doctor={event}
-              onRemoveDoctor={handleRemoveDoctor}
+              event={event}
             />
           ))}
         </ul>

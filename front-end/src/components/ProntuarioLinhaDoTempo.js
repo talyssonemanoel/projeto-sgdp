@@ -28,7 +28,7 @@ const ProntuarioLinhaDoTempo = ({ atendimentos, currentPage, setCurrentPage }) =
                   <div className="card-header text-center ano-text date-card">{year}</div>
                   <div className="card-body date-card body-do-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', lineHeight: '1' }}>
                     <h5 className=" text-center dia-text date-card">{day}</h5>
-                    <p className="card-text text-center mes-text">{month}</p>
+                    {month}
                   </div>
                 </div>
                 <div class="col-auto lines lines1" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '50px' }}>
@@ -57,13 +57,13 @@ const ProntuarioLinhaDoTempo = ({ atendimentos, currentPage, setCurrentPage }) =
                       <hr></hr>
                       <div class="mb-0 d-flex justify-content-start">
                         <p>
-                          <div>Informações:</div>
+                          <div>Informações: {atendimento.ambulatorio} {atendimento.info}</div>
                         </p>
                       </div>
                       <hr></hr>
                       <div class="mb-0 d-flex justify-content-start">
                         <p>
-                          <div>Informações confidenciais:</div>
+                          <div>Informações confidenciais: {atendimento.infoPrivado}</div>
                         </p>
                         <i class="fa-regular fa-eye" style={{ color: '#000000' }}></i>
                       </div>

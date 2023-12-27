@@ -4,11 +4,13 @@ import "../css/Prontuario.css";
 import BuscarPaciente from '../components/BuscarPaciente';
 import ProntuarioLinhaDoTempo from '../components/ProntuarioLinhaDoTempo'; // Importe o novo componente
 import moment from 'moment';
+import { useLocation } from 'react-router-dom';
 
-const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
+const ProntuarioEspecialista = ({ User }) => {
     const [selectedPaciente, setSelectedPaciente] = useState(null);
     const [pacienteInputValue, setPacienteInputValue] = useState();
     const [atendimentos, setAtendimentos] = useState([]);
+    const [atendimentosProntuario, setAtendimentosProntuario] = useState([]);
     const [selectedSpecialty, setSelectedSpecialty] = useState(User.nomeEspecialidade);
     const [emAtendimento, setEmAtendimento] = useState('');
     const [currentAtendimento, setCurrentAtendimento] = useState('');
@@ -19,27 +21,34 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
     const [checkboxAtivada, setCheckboxAtivada] = useState(false);
     const [atendimentoInfo, setAtendimentoInfo] = useState('');
     const [privateInfo, setPrivateInfo] = useState('');
+    const [loading, setLoading] = useState(true);
 
+    const location = useLocation();
+    let event = location.state?.event;
 
+    useEffect(() => {
+        const fetchPatientData = async () => {
+            try {
+                // Fazer a requisição para obter os detalhes do paciente usando event._key
+                const response = await api.get('/patients/GetPatientByKey', { params: { q: event.atendimento.keyPaciente } });
 
-    /*useEffect(() => {
-      const loadPacienteData = async () => {
-        try {
-          const response = await api.get(`/patients/${pacienteKey}`);
-          const data = response.data;
-          setSelectedPaciente(data);
-          loadAtendimentos(pacienteKey, User._key, ambulatorio);
-        } catch (error) {
-          console.error('Erro ao buscar dados do paciente:', error);
+                // Atualizar o estado selectedPaciente com os dados obtidos
+                setSelectedPaciente(response.data);
+                loadAtendimentos(response.data._key, User._key, event.atendimento.ambulatorio)
+            } catch (error) {
+                console.error('Erro ao buscar dados do paciente:', error);
+            } finally {
+                // Desativar o indicador de carregamento, independentemente do resultado
+                setLoading(false);
+            }
+
+        };
+
+        // Verificar se event existe e tem a propriedade _key
+        if (event) {
+            fetchPatientData();
         }
-      };
-  
-      if (pacienteKey) {
-        loadPacienteData();
-      }
-    }, [pacienteKey]);*/
-
-
+    }, [event]);
 
     const loadPacienteOptions = async (inputValue, ambulatorio) => {
         try {
@@ -47,6 +56,9 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
             const data = response.data.map(item => ({
                 value: item._key,
                 label: item.nome,
+
+                _key: item._key,
+                nome: item.nome,
                 birthday: item.dataDeNascimento,
                 cartaoSus: item.cartaoSus,
                 rg: item.rg,
@@ -72,6 +84,7 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                 acompanhamentoDeSaude: item.acompanhamentoDeSaude,
                 observacoes: item.observacoes
             }));
+            console.log(User)
             return data;
         } catch (error) {
             console.error('Erro ao buscar dados de pacientes:', error);
@@ -81,11 +94,25 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
 
     // Crie uma função para carregar os atendimentos
     const loadAtendimentos = async (pacienteKey, especialistaKey, ambulatorio) => {
-
+        //carrega atendimentos do médico que estão agendados
         try {
-            const response = await api.get('/agendar/GetServicesByPatientKeyAndSpecialistKey', { params: { patient: pacienteKey, specialist: especialistaKey, ambulatorio: ambulatorio } });
-            setAtendimentos(response.data);
-            console.log(response.data)
+            if (event) {
+                console.log(event)
+                setAtendimentos([event.atendimento])
+            } else {
+                const response = await api.get('/agendar/GetServicesByPatientKeyAndSpecialistKey', { params: { patient: pacienteKey, specialist: especialistaKey, ambulatorio: ambulatorio, status: "agendado" } });
+                setAtendimentos(response.data);
+            }
+
+        } catch (error) {
+            console.error('Erro ao buscar dados de atendimentos:', error);
+        }
+
+        //carrega atendimentos do prontuario do paciente
+        try {
+            const response = await api.get('/agendar/GetServicesByPatientKey', { params: { q: pacienteKey, ambulatorio: ambulatorio } });
+            const filteredAtendimentos = response.data.filter(atendimento => atendimento.especialidade === selectedSpecialty && atendimento.status === "finalizado");
+            setAtendimentosProntuario(filteredAtendimentos);
 
         } catch (error) {
             console.error('Erro ao buscar dados de atendimentos:', error);
@@ -99,7 +126,7 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
     const handlePacienteChange = (selectedOption) => {
         setSelectedPaciente(selectedOption);
         setEmAtendimento(false)
-        loadAtendimentos(selectedOption.value, User._key, activeButton);
+        loadAtendimentos(selectedOption._key, User._key, activeButton);
     };
 
     const handlePacienteClear = () => {
@@ -110,24 +137,67 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
 
     const handleStartAtendimento = (atendimento) => {
         setCurrentAtendimento(atendimento);
+        setResumoView(false)
         setEmAtendimento(true)
         setAtendimentoView(true)
     };
 
-    const handleFinalizarAtendimento = () => {
-        setCurrentAtendimento(null);
-        setEmAtendimento(false);
-        setAtendimentoView(false);
-        setAtendimentoInfo(''); // Limpar o texto
-        setPrivateInfo(''); // Limpar o texto
+    const handleFinalizarAtendimento = async (_key, info, infoPrivado) => {
+        try {
+            const response = await api.put(
+                '/agendar/finalizar',
+                {
+                    _key: _key,
+                    info: info,
+                    infoPrivado: infoPrivado
+                },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+            setCurrentAtendimento(null);
+            setEmAtendimento(false);
+            setAtendimentoView(false);
+            setAtendimentoInfo('');
+            setPrivateInfo('');
+        } catch (error) {
+            console.error('Erro ao finalizar atendimento:', error);
+        }
     };
+
+    const handleCancelarAtendimento = () => {
+        setCurrentAtendimento('');
+        setEmAtendimento(false)
+        setAtendimentoView(false)
+        setAtendimentoInfo('')
+        setPrivateInfo('')
+        setCheckboxAtivada(false)
+    };
+
+    const handleFecharPaciente = () => {
+        handlePacienteChange('')
+        setCurrentAtendimento('');
+        setEmAtendimento(false)
+        setAtendimentoView(false)
+        setAtendimentoInfo('')
+        setPrivateInfo('')
+        setCheckboxAtivada(false)
+        setAtendimentoView('')
+        setResumoView('')
+        setActiveButton('')
+        setAtendimentos([])
+        setAtendimentosProntuario('')
+        event = null
+    }
 
     return (
         <div>
-            {selectedPaciente ? (
+            {selectedPaciente || event ? (
                 (() => {
-                    const birthday = moment(selectedPaciente.birthday);
-                    const age = moment().diff(birthday, 'years');
+                    let birthday
+                    let age
+                    if (selectedPaciente) {
+                        birthday = moment(selectedPaciente.birthday);
+                        age = moment().diff(birthday, 'years');
+                    }
 
                     return (
                         <div className='body-prontuario d-flex'>
@@ -141,7 +211,9 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                                             <React.Fragment key={atendimento._key}>
                                                 <div className='block-atendimento h-100'>
                                                     <div className='block-atendimento-hora'>
-                                                        <div className='block-atendimento-data'>{atendimento.data}</div>
+                                                        <div className='block-atendimento-data'>
+                                                            {moment(atendimento.data).format('DD/MM/YYYY')}
+                                                        </div>
                                                         {atendimento.horaInicio} - {atendimento.horaFim}
                                                     </div>
                                                     <div className='block-btn-atendimento h-100'>
@@ -166,6 +238,7 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                                                 setResumoView(''); // Desmarque o botão se já estiver selecionado
                                                 setCurrentPage(0);
                                             } else {
+                                                setAtendimentoView(false);
                                                 setResumoView(true); // Selecione o botão se não estiver selecionado
                                                 setAtendimentoView('');
                                                 setCurrentPage(0);
@@ -200,10 +273,17 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                                             <div className="cabecalho-prontuario">
                                                 <div className='d-flex justify-content-between'>
                                                     <div>
-                                                        <h6>{selectedPaciente.label}</h6>
+                                                        <h6>{selectedPaciente?.nome}</h6>
                                                     </div>
                                                     <div>
-                                                        <button type="button" class="btn-close d-flex align-items-start p-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        <button
+                                                            type="button"
+                                                            class="btn-close d-flex align-items-start p-0"
+                                                            aria-label="Close"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#staticBackdrop"
+                                                        >
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 <h7>{age} anos</h7>
@@ -214,7 +294,7 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                                             </div>
 
                                             <div>
-                                                <ProntuarioLinhaDoTempo atendimentos={atendimentos} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                                                <ProntuarioLinhaDoTempo atendimentos={atendimentosProntuario} currentPage={currentPage} setCurrentPage={setCurrentPage} />
                                             </div>
                                         </div>
                                     ) : atendimentoView ? (
@@ -222,10 +302,17 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                                             <div className="cabecalho-prontuario">
                                                 <div className='d-flex justify-content-between'>
                                                     <div>
-                                                        <h6>{selectedPaciente.label}</h6>
+                                                        <h6>{selectedPaciente?.nome}</h6>
                                                     </div>
                                                     <div>
-                                                        <button type="button" class="btn-close d-flex align-items-start p-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        <button
+                                                            type="button"
+                                                            class="btn-close d-flex align-items-start p-0"
+                                                            aria-label="Close"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#staticBackdrop"
+                                                        >
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 <h7>{age} anos</h7>
@@ -276,19 +363,21 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                                                         </div>
                                                     )}
                                                     <button
-                                                        type="button"
-                                                        className={`btn btn-danger btn-sm me-1 ${!checkboxAtivada ? 'mt-3' : ''}`}
-
-                                                    >
-                                                        Cancelar
-                                                    </button>
+                                                            type="button"
+                                                            class={`btn btn-danger btn-sm me-1 ${!checkboxAtivada ? 'mt-3' : ''}`}
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#fecharPaciente"
+                                                        >
+                                                            Cancelar
+                                                        </button>
                                                     <button
-                                                        type="button"
-                                                        className={`btn btn-primary btn-sm ${!checkboxAtivada ? 'mt-3' : ''}`}
-                                                        onClick={handleFinalizarAtendimento}
-                                                    >
-                                                        Finalizar atendimento
-                                                    </button>
+                                                            type="button"
+                                                            className={`btn btn-primary btn-sm ${!checkboxAtivada ? 'mt-3' : ''}`}
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#finalizarAtendimento"
+                                                        >
+                                                            Finalizar atendimento
+                                                        </button>
                                                 </div>
                                             )}
                                         </div>
@@ -298,77 +387,84 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                                                 <div class='d-flex justify-content-between'>
                                                     <h4 class='mx-auto'>FICHA INDIVIDUAL</h4>
                                                     <div className=''>
-                                                        <button type="button" class="btn-close d-flex align-items-start p-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        <button
+                                                            type="button"
+                                                            class="btn-close d-flex align-items-start p-0"
+                                                            aria-label="Close"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#fecharPaciente"
+                                                        >
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 <div class='divisor-subtitle'>
                                                     <h6>IDENTIFICAÇÃO</h6>
                                                 </div>
                                             </div>
-                                            <h7>Nome completo: {selectedPaciente.label}</h7>
+                                            <h7>Nome completo: {selectedPaciente?.nome}</h7>
                                             <div className='d-flex'>
                                                 <div className='col-6'>
-                                                    <h7>Data de nascimento: {moment(selectedPaciente.birthday).format('DD/MM/YYYY')}</h7>
+                                                    <h7>Data de nascimento: {moment(selectedPaciente?.birthday).format('DD/MM/YYYY')}</h7>
                                                 </div>
                                                 <div className='col-6'>
-                                                    <h7>Cartão do SUS: {selectedPaciente.cartaoSus}</h7>
+                                                    <h7>Cartão do SUS: {selectedPaciente?.cartaoSus}</h7>
                                                 </div>
                                             </div>
                                             <div className='d-flex'>
                                                 <div className='col-6'>
-                                                    <h7>RG: {selectedPaciente.rg}</h7>
+                                                    <h7>RG: {selectedPaciente?.rg}</h7>
                                                 </div>
                                                 <div className='col-6'>
-                                                    <h7>CPF: {selectedPaciente.cpf}</h7>
+                                                    <h7>CPF: {selectedPaciente?.cpf}</h7>
                                                 </div>
                                             </div>
                                             <div className='d-flex'>
                                                 <div className='col-6'>
-                                                    <h7>Orientação sexual: {selectedPaciente.orientacaoSexual}</h7>
+                                                    <h7>Orientação sexual: {selectedPaciente?.orientacaoSexual}</h7>
                                                 </div>
                                                 <div className='col-6'>
-                                                    <h7>Identidade de gênero: {selectedPaciente.identidadeDeGenero}</h7>
+                                                    <h7>Identidade de gênero: {selectedPaciente?.identidadeDeGenero}</h7>
                                                 </div>
                                             </div>
                                             <div className='d-flex'>
                                                 <div className='col-6'>
-                                                    <h7>Etnia: {selectedPaciente.etnia}</h7>
+                                                    <h7>Etnia: {selectedPaciente?.etnia}</h7>
                                                 </div>
                                                 <div className='col-6'>
-                                                    <h7>Escolaridade: {selectedPaciente.escolaridade}</h7>
+                                                    <h7>Escolaridade: {selectedPaciente?.escolaridade}</h7>
                                                 </div>
                                             </div>
                                             <div className='d-flex'>
                                                 <div className='col-6'>
-                                                    <h7>Estado civil: {selectedPaciente.estadoCivil}</h7>
+                                                    <h7>Estado civil: {selectedPaciente?.estadoCivil}</h7>
                                                 </div>
                                                 <div className='col-6'>
-                                                    <h7>Ocupação: {selectedPaciente.ocupacao}</h7>
+                                                    <h7>Ocupação: {selectedPaciente?.ocupacao}</h7>
                                                 </div>
                                             </div>
-                                            <h7>UBS REF: {selectedPaciente.ubsCadastrada}</h7>
-                                            <h7>Nome da mãe: {selectedPaciente.nomeDaMae}</h7>
+                                            <h7>UBS REF: {selectedPaciente?.ubsCadastrada}</h7>
+                                            <h7>Nome da mãe: {selectedPaciente?.nomeDaMae}</h7>
                                             <div className='w-100 text-center'>
                                                 <div className='divisor-subtitle'>
                                                     <h6>ENDEREÇO</h6>
                                                 </div>
                                             </div>
-                                            <h7>Logradouro: {selectedPaciente.logradouro}</h7>
+                                            <h7>Logradouro: {selectedPaciente?.logradouro}</h7>
                                             <div className='d-flex'>
                                                 <div className='col-6'>
-                                                    <h7>Número: {selectedPaciente.numeroEndereco}</h7>
+                                                    <h7>Número: {selectedPaciente?.numeroEndereco}</h7>
                                                 </div>
                                                 <div className='col-6'>
-                                                    <h7>Bairro: {selectedPaciente.bairro}</h7>
+                                                    <h7>Bairro: {selectedPaciente?.bairro}</h7>
                                                 </div>
                                             </div>
-                                            <h7>Complemento: {selectedPaciente.complementoEndereco}</h7>
+                                            <h7>Complemento: {selectedPaciente?.complementoEndereco}</h7>
                                             <div className='d-flex'>
                                                 <div className='col-6'>
-                                                    <h7>Cidade: {selectedPaciente.cidade}</h7>
+                                                    <h7>Cidade: {selectedPaciente?.cidade}</h7>
                                                 </div>
                                                 <div className='col-6'>
-                                                    <h7>Estado: {selectedPaciente.estado}</h7>
+                                                    <h7>Estado: {selectedPaciente?.estado}</h7>
                                                 </div>
                                             </div>
                                             <div className='w-100 text-center'>
@@ -376,16 +472,16 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                                                     <h6>CONTATO</h6>
                                                 </div>
                                             </div>
-                                            <h7>Email: {selectedPaciente.email}</h7>
+                                            <h7>Email: {selectedPaciente?.email}</h7>
                                             <div className='d-flex'>
                                                 <div className='col-6'>
-                                                    <h7>Telefone: {selectedPaciente.telefone}</h7>
+                                                    <h7>Telefone: {selectedPaciente?.telefone}</h7>
                                                 </div>
                                                 <div className='col-6'>
-                                                    <h7>Whatsapp: {selectedPaciente.whatsapp}</h7>
+                                                    <h7>Whatsapp: {selectedPaciente?.whatsapp}</h7>
                                                 </div>
                                             </div>
-                                            <h7>Em caso de emergência: {selectedPaciente.contatoEmergencia}</h7>
+                                            <h7>Em caso de emergência: {selectedPaciente?.contatoEmergencia}</h7>
                                         </div>
 
                                     )}
@@ -406,8 +502,65 @@ const ProntuarioEspecialista = ({ pacienteKey, User, ambulatorio }) => {
                     handlePacienteClear={handlePacienteClear}
                 />
             )}
+
+            <div class="modal fade " id="fecharPaciente" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="fecharPacienteLabel">Confirme sua decisão</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Tem certeza que deseja retornar para a página de busca de pacientes?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onClick={handleFecharPaciente}>Sim</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade " id="finalizarAtendimento" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="finalizarAtendimentoLabel">Confirme sua decisão</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Tem certeza que deseja retornar para a página de bussssssca de pacientes?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onClick={handleFecharPaciente}>Sim</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade " id="cancelarAtendimento" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="cancelarAtendimentoLabel">Confirme sua decisão</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Ao cancelar o atendimento, você perderá todas as informações não salvas. Você deseja continuar?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onClick={handleFecharPaciente}>Sim</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
     );
+
 };
+
 export default ProntuarioEspecialista;
 

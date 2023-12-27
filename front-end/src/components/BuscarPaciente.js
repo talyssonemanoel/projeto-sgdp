@@ -60,7 +60,7 @@ const BuscarPaciente = ({
                     onInputChange={handlePacienteInputChange}
                     onChange={handlePacienteChange}
                     value={selectedPaciente}
-                    isDisabled={selectedPaciente !== null}
+                    //isDisabled={selectedPaciente !== null}
                     components={{ DropdownIndicator: () => null, indicatorSeparator: () => null }}
                   />
                 </div>
